@@ -22,27 +22,54 @@ SQL_DIR = repo_root / 'sql'
 # Ordered list of SQL filenames (relative to repo root). Edit if you add new
 # matviews that have dependencies.
 ORDERED_SQL = [
+    # base tables / filtered views
+    'create_heikin_ashi_tables.sql',
+    'create_mv_ha_candles.sql',
+    'create_mv_nifty_options_filtered.sql',
     'create_mv_all_5min_breakouts.sql',
-    'create_mv_base_strike_selection.sql',
-    'create_mv_breakout_context_round1.sql',
+
+    # ranking and reentry helpers (must run before strike selection)
     'create_mv_ranked_breakouts_with_rounds.sql',
     'create_mv_ranked_breakouts_with_rounds_for_reentry.sql',
-    'create_mv_live_prices_entry_round1.sql',
+
+    # strike selection / breakout context
+    'create_mv_base_strike_selection.sql',
+    'create_mv_breakout_context_round1.sql',
+
+    # live prices and legs
     'create_mv_entry_and_hedge_legs.sql',
+    'create_mv_live_prices_entry_round1.sql',
+
+    # entry SL detection & executions
     'create_mv_entry_sl_hits_round1.sql',
     'create_mv_entry_sl_executions_round1.sql',
+
+    # entry lifecycle
     'create_mv_entry_open_legs_round1.sql',
     'create_mv_entry_profit_booking_round1.sql',
     'create_mv_entry_eod_close_round1.sql',
     'create_mv_entry_closed_legs_round1.sql',
     'create_mv_entry_round1_stats.sql',
+
+    # hedge exit logic
     'create_mv_hedge_exit_on_all_entry_sl.sql',
     'create_mv_hedge_exit_partial_conditions.sql',
     'create_mv_hedge_closed_legs_round1.sql',
     'create_mv_hedge_eod_exit_round1.sql',
+
+    # entry-exit interactions
     'create_mv_entry_exit_on_partial_hedge_round1.sql',
     'create_mv_double_buy_legs_round1.sql',
-    'create_mv_entry_final_exit_round1.sql'
+    'create_mv_entry_final_exit_round1.sql',
+
+    # rehedge pipeline
+    'create_mv_rehedge_trigger_round1.sql',
+    'create_mv_rehedge_candidate_round1.sql',
+    'create_mv_rehedge_selected_round1.sql',
+    'create_mv_rehedge_leg_round1.sql',
+    'create_mv_rehedge_eod_exit_round1.sql',
+    # final aggregation
+    'create_mv_all_legs_round1.sql',
 ]
 
 

@@ -43,12 +43,12 @@ SELECT
     e.trade_date,
     e.expiry_date,
     e.breakout_time,
-    s.exit_time AS entry_time,
+    s.exit_time AS entry_time,   -- double buy entry = SL exit time
     e.spot_price,
     e.option_type,
     e.strike,
 
-    s.exit_price AS entry_price,
+    s.exit_price AS entry_price, -- buy at SL price
 
     0 AS sl_level,
     e.entry_round,
@@ -56,12 +56,12 @@ SELECT
     'BUY' AS transaction_type,
 
     c.eod_time AS exit_time,
-    p.option_open AS exit_price,
+    p.option_close AS exit_price,
 
     'DOUBLE_BUY_EOD_EXIT' AS exit_reason,
 
     ROUND(
-        (s.exit_price - p.option_open)
+        (p.option_close - s.exit_price)
         * c.lot_size
         * c.no_of_lots,
         2

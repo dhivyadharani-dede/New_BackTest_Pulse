@@ -1,4 +1,4 @@
--- Create materialized view with entry and hedge legs
+-- Materialized view: entry and hedge legs (round 1)
 DROP MATERIALIZED VIEW IF EXISTS public.mv_entry_and_hedge_legs CASCADE;
 CREATE MATERIALIZED VIEW IF NOT EXISTS public.mv_entry_and_hedge_legs AS
 WITH strategy AS (
@@ -6,8 +6,7 @@ WITH strategy AS (
         num_entry_legs,
         num_hedge_legs,
         hedge_entry_price_cap
-    FROM public.v_strategy_config
-    LIMIT 1
+    FROM v_strategy_config
 ),
 
 /* =========================
@@ -27,9 +26,9 @@ entry_strike_cte AS (
         s.entry_round,
         'ENTRY'::TEXT AS leg_type,
         'SELL'::TEXT AS transaction_type
-    FROM public.mv_base_strike_selection s
+    FROM mv_base_strike_selection s
     JOIN strategy st ON TRUE
-    JOIN public.v_nifty_options_filtered o 
+    JOIN v_nifty_options_filtered o 
       ON o.date   = s.trade_date
      AND o.expiry = s.expiry_date
      AND o.time   = s.entry_time
@@ -46,8 +45,8 @@ entry_strike_cte AS (
 /* =========================
    HEDGE BASE STRIKE (RANKED)
    ========================= */
-hedge_ranked AS ( 
-    SELECT 
+hedge_ranked AS (
+    SELECT
         b.trade_date,
         b.breakout_time,
         b.entry_time,
@@ -61,15 +60,31 @@ hedge_ranked AS (
         b.spot_price,
         o.strike,
         o.open AS hedge_price,
+
+        CASE
+            WHEN o.strike = b.atm_strike
+             AND o.open <= s.hedge_entry_price_cap
+            THEN 0
+            ELSE 1
+        END AS atm_valid_priority,
+
+        ABS(o.open - s.hedge_entry_price_cap) AS premium_diff,
+
         ROW_NUMBER() OVER (
-            PARTITION BY b.trade_date, b.expiry_date
+            PARTITION BY b.trade_date, b.expiry_date, b.entry_round
             ORDER BY
-                CASE WHEN o.strike = b.atm_strike THEN 0 ELSE 1 END,
+                CASE
+                    WHEN o.strike = b.atm_strike
+                     AND o.open <= s.hedge_entry_price_cap
+                    THEN 0
+                    ELSE 1
+                END,
                 ABS(o.open - s.hedge_entry_price_cap)
         ) AS rn
-    FROM public.mv_base_strike_selection b
+
+    FROM mv_base_strike_selection b
     JOIN strategy s ON TRUE
-    JOIN public.v_nifty_options_filtered o 
+    JOIN v_nifty_options_filtered o 
       ON o.date   = b.trade_date
      AND o.time   = b.entry_time
      AND o.expiry = b.expiry_date
@@ -104,7 +119,7 @@ hedge_strike_cte AS (
         'SELL'::TEXT AS transaction_type
     FROM selected_hedge_base_strike s
     JOIN strategy st ON TRUE
-    JOIN public.v_nifty_options_filtered o 
+    JOIN v_nifty_options_filtered o 
       ON o.date   = s.trade_date
      AND o.expiry = s.expiry_date
      AND o.time   = s.entry_time
@@ -125,5 +140,4 @@ SELECT * FROM entry_strike_cte
 UNION ALL
 SELECT * FROM hedge_strike_cte;
 
--- optional index to speed lookups
 CREATE INDEX IF NOT EXISTS idx_mv_entry_and_hedge_legs_date_time ON public.mv_entry_and_hedge_legs (trade_date, breakout_time);
