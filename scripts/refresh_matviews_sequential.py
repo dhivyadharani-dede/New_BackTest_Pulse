@@ -10,6 +10,7 @@ Usage:
 import re
 import sys
 from pathlib import Path
+import subprocess
 repo_root = Path(__file__).resolve().parents[1]
 if str(repo_root) not in sys.path:
     sys.path.insert(0, str(repo_root))
@@ -70,6 +71,8 @@ ORDERED_SQL = [
     'create_mv_rehedge_eod_exit_round1.sql',
     # final aggregation
     'create_mv_all_legs_round1.sql',
+    # reentry triggered breakouts
+    'create_mv_reentry_triggered_breakouts.sql',
 ]
 
 
@@ -123,6 +126,10 @@ def main():
         # refresh any materialized views declared in this SQL file
         for mv in mv_names:
             refresh_matview(mv)
+
+    print('Running insert into strategy_leg_book...')
+    subprocess.check_call([sys.executable, str(repo_root / 'scripts' / 'insert_sl_legs.py')])
+    print('Insert completed.')
 
     print('All done.')
 
