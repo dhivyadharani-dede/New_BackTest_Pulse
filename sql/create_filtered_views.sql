@@ -1,0 +1,113 @@
+-- Views that expose per-strategy filtered rows using runtime_strategy_config
+
+CREATE OR REPLACE VIEW public.v_ha_big_filtered AS
+SELECT
+  r.strategy_name,
+  h.trade_date,
+  h.candle_time,
+  h.open,
+  h.high,
+  h.low,
+  h.close,
+  h.ha_open,
+  h.ha_high,
+  h.ha_low,
+  h.ha_close
+FROM public.ha_big h
+JOIN public.runtime_strategy_config r
+  ON h.trade_date >= r.from_date
+ AND h.trade_date <= r.to_date;
+
+CREATE OR REPLACE VIEW public.v_ha_small_filtered AS
+SELECT
+  r.strategy_name,
+  h.trade_date,
+  h.candle_time,
+  h.open,
+  h.high,
+  h.low,
+  h.close,
+  h.ha_open,
+  h.ha_high,
+  h.ha_low,
+  h.ha_close
+FROM public.ha_small h
+JOIN public.runtime_strategy_config r
+  ON h.trade_date >= r.from_date
+ AND h.trade_date <= r.to_date;
+
+CREATE OR REPLACE VIEW public.v_ha_1m_filtered AS
+SELECT
+  r.strategy_name,
+  h.trade_date,
+  h.candle_time,
+  h.open,
+  h.high,
+  h.low,
+  h.close,
+  h.ha_open,
+  h.ha_high,
+  h.ha_low,
+  h.ha_close
+FROM public.ha_1m h
+JOIN public.runtime_strategy_config r
+  ON h.trade_date >= r.from_date
+ AND h.trade_date <= r.to_date;
+
+-- Source market data views
+CREATE OR REPLACE VIEW public.v_nifty50_filtered AS
+SELECT
+  r.strategy_name,
+  m.date,
+  m.time,
+  m.open,
+  m.high,
+  m.low,
+  m.close,
+  m.volume,
+  m.oi,
+  m.option_nm
+FROM public."Nifty50" m
+JOIN public.runtime_strategy_config r
+  ON m.date >= r.from_date
+ AND m.date <= r.to_date;
+
+CREATE OR REPLACE VIEW public.v_nifty_options_filtered AS
+SELECT
+  r.strategy_name,
+  o.date,
+  o.time,
+  o.open,
+  o.high,
+  o.low,
+  o.close,
+  o.volume,
+  o.oi,
+  o.option_type,
+  o.strike_price
+FROM public.Nifty_options o
+JOIN public.runtime_strategy_config r
+  ON o.date >= r.from_date
+ AND o.date <= r.to_date;
+
+-- Convenience MVs views
+CREATE OR REPLACE VIEW public.v_mv_ha_big_candle_filtered AS
+SELECT r.strategy_name, mv.*
+FROM public.mv_ha_big_candle mv
+JOIN public.runtime_strategy_config r
+  ON mv.trade_date >= r.from_date
+ AND mv.trade_date <= r.to_date;
+
+CREATE OR REPLACE VIEW public.v_mv_ha_small_candle_filtered AS
+SELECT r.strategy_name, mv.*
+FROM public.mv_ha_small_candle mv
+JOIN public.runtime_strategy_config r
+  ON mv.trade_date >= r.from_date
+ AND mv.trade_date <= r.to_date;
+
+CREATE OR REPLACE VIEW public.v_mv_ha_1m_candle_filtered AS
+SELECT r.strategy_name, mv.*
+FROM public.mv_ha_1m_candle mv
+JOIN public.runtime_strategy_config r
+  ON mv.trade_date >= r.from_date
+ AND mv.trade_date <= r.to_date;
