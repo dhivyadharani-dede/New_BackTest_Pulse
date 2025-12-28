@@ -13,7 +13,7 @@ SELECT
     option_type,
     strike,
     entry_price,
-    sl_level,
+    '0' as sl_level,
     entry_round,
     leg_type,
     transaction_type,
