@@ -35,7 +35,7 @@ SELECT
         2
     ) AS pnl_amount
 
-FROM mv_rehedge_leg_reentry h
+FROM mv_rehedge_leg_round1 h
 JOIN strategy s ON TRUE
 JOIN v_nifty_options_filtered o
   ON o.date = h.trade_date
