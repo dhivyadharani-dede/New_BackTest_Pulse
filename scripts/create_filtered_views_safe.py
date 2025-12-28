@@ -10,115 +10,125 @@ from src.db import fetch_sql_to_dict, execute_sql
 SQL_DIR = Path(repo_root) / 'sql'
 
 VIEW_DEFS = {
-    'v_ha_big_filtered': {
-        'depends': ['ha_big'],
-        'sql': '''
-CREATE OR REPLACE VIEW public.v_ha_big_filtered AS
+        'v_ha_big_filtered': {
+                'depends': ['ha_big'],
+                'sql': '''
+DROP VIEW IF EXISTS public.v_ha_big_filtered CASCADE;
+DROP MATERIALIZED VIEW IF EXISTS public.v_ha_big_filtered CASCADE;
+CREATE MATERIALIZED VIEW public.v_ha_big_filtered AS
 SELECT
-  r.strategy_name,
-  h.trade_date,
-  h.candle_time,
-  h.open,
-  h.high,
-  h.low,
-  h.close,
-  h.ha_open,
-  h.ha_high,
-  h.ha_low,
-  h.ha_close
+    r.strategy_name,
+    h.trade_date,
+    h.candle_time,
+    h.open,
+    h.high,
+    h.low,
+    h.close,
+    h.ha_open,
+    h.ha_high,
+    h.ha_low,
+    h.ha_close
 FROM public.ha_big h
 JOIN public.runtime_strategy_config r
-  ON h.trade_date >= r.from_date
+    ON h.trade_date >= r.from_date
  AND h.trade_date <= r.to_date;
 '''
-    },
-    'v_ha_small_filtered': {
-        'depends': ['ha_small'],
-        'sql': """
-CREATE OR REPLACE VIEW public.v_ha_small_filtered AS
+        },
+        'v_ha_small_filtered': {
+                'depends': ['ha_small'],
+                'sql': """
+DROP VIEW IF EXISTS public.v_ha_small_filtered CASCADE;
+DROP MATERIALIZED VIEW IF EXISTS public.v_ha_small_filtered CASCADE;
+CREATE MATERIALIZED VIEW public.v_ha_small_filtered AS
 SELECT
-  r.strategy_name,
-  h.trade_date,
-  h.candle_time,
-  h.open,
-  h.high,
-  h.low,
-  h.close,
-  h.ha_open,
-  h.ha_high,
-  h.ha_low,
-  h.ha_close
+    r.strategy_name,
+    h.trade_date,
+    h.candle_time,
+    h.open,
+    h.high,
+    h.low,
+    h.close,
+    h.ha_open,
+    h.ha_high,
+    h.ha_low,
+    h.ha_close
 FROM public.ha_small h
 JOIN public.runtime_strategy_config r
-  ON h.trade_date >= r.from_date
+    ON h.trade_date >= r.from_date
  AND h.trade_date <= r.to_date;
 """
-    },
-    'v_ha_1m_filtered': {
-        'depends': ['ha_1m'],
-        'sql': """
-CREATE OR REPLACE VIEW public.v_ha_1m_filtered AS
+        },
+        'v_ha_1m_filtered': {
+                'depends': ['ha_1m'],
+                'sql': """
+DROP VIEW IF EXISTS public.v_ha_1m_filtered CASCADE;
+DROP MATERIALIZED VIEW IF EXISTS public.v_ha_1m_filtered CASCADE;
+CREATE MATERIALIZED VIEW public.v_ha_1m_filtered AS
 SELECT
-  r.strategy_name,
-  h.trade_date,
-  h.candle_time,
-  h.open,
-  h.high,
-  h.low,
-  h.close,
-  h.ha_open,
-  h.ha_high,
-  h.ha_low,
-  h.ha_close
+    r.strategy_name,
+    h.trade_date,
+    h.candle_time,
+    h.open,
+    h.high,
+    h.low,
+    h.close,
+    h.ha_open,
+    h.ha_high,
+    h.ha_low,
+    h.ha_close
 FROM public.ha_1m h
 JOIN public.runtime_strategy_config r
-  ON h.trade_date >= r.from_date
+    ON h.trade_date >= r.from_date
  AND h.trade_date <= r.to_date;
 """
-    },
-    'v_nifty50_filtered': {
-        'depends': ['"Nifty50"', 'nifty50'],
-        'sql': """
-CREATE OR REPLACE VIEW public.v_nifty50_filtered AS
+        },
+        'v_nifty50_filtered': {
+                'depends': ['"Nifty50"', 'nifty50'],
+                'sql': """
+DROP VIEW IF EXISTS public.v_nifty50_filtered CASCADE;
+DROP MATERIALIZED VIEW IF EXISTS public.v_nifty50_filtered CASCADE;
+CREATE MATERIALIZED VIEW public.v_nifty50_filtered AS
 SELECT
-  r.strategy_name,
-  m.date,
-  m.time,
-  m.open,
-  m.high,
-  m.low,
-  m.close,
-  m.volume,
-  m.oi,
-  m.option_nm
+    r.strategy_name,
+    m.date,
+    m.time,
+    m.open,
+    m.high,
+    m.low,
+    m.close,
+    m.volume,
+    m.oi,
+    m.option_nm
 FROM public."Nifty50" m
 JOIN public.runtime_strategy_config r
-  ON m.date >= r.from_date
+    ON m.date >= r.from_date
  AND m.date <= r.to_date;
 """
-    },
-    'v_nifty_options_filtered': {
-        'depends': ['nifty_options','"Nifty_options"'],
-        'sql': """
-CREATE OR REPLACE VIEW public.v_nifty_options_filtered AS
+        },
+        'v_nifty_options_filtered': {
+                'depends': ['nifty_options','"Nifty_options"'],
+                'sql': """
+DROP VIEW IF EXISTS public.v_nifty_options_filtered CASCADE;
+DROP MATERIALIZED VIEW IF EXISTS public.v_nifty_options_filtered CASCADE;
+CREATE MATERIALIZED VIEW public.v_nifty_options_filtered AS
 SELECT
-  r.strategy_name,
-  o.date,
-  o.time,
-  o.open,
-  o.high,
-  o.low,
-  o.close,
-  o.volume,
-  o.oi,
-  o.option_type,
+    r.strategy_name,
+    o.date,
+    o.time,
+    o.open,
+    o.high,
+    o.low,
+    o.close,
+    o.volume,
+    o.oi,
+    o.option_type,
     o.strike
 FROM public."Nifty_options" o
 JOIN public.runtime_strategy_config r
-  ON o.date >= r.from_date
+    ON o.date >= r.from_date
  AND o.date <= r.to_date;
 """
-    },
+        },
     'v_mv_ha_big_candle_filtered': {
         'depends': ['mv_ha_big_candle'],
         'sql': """

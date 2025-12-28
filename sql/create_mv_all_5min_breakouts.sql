@@ -1,4 +1,5 @@
-CREATE MATERIALIZED VIEW mv_all_5min_breakouts AS
+DROP MATERIALIZED VIEW IF EXISTS public.mv_all_5min_breakouts CASCADE;
+CREATE MATERIALIZED VIEW IF NOT EXISTS public.mv_all_5min_breakouts AS
 WITH ha_bounds AS (
     SELECT
         h.trade_date,
@@ -82,3 +83,6 @@ SELECT
 FROM combined
 JOIN v_strategy_config s ON TRUE
 WHERE breakout_type IS NOT NULL;
+
+-- create an index to speed lookups
+CREATE INDEX IF NOT EXISTS idx_mv_all_5min_breakouts_date_time ON public.mv_all_5min_breakouts (trade_date, breakout_time);
