@@ -29,7 +29,7 @@ SELECT
   leg_type,
   entry_round,
   exit_reason
-FROM mv_all_legs_round1
+FROM mv_all_legs_reentry
 """
 
 INSERT_SQL = (
@@ -78,7 +78,7 @@ def run(truncate: bool, batch: int, dry_run: bool):
                     cur.execute('DELETE FROM strategy_leg_book')
                 conn.commit()
 
-    print('Reading rows from `mv_all_legs_pnl_entry_round1`')
+    print('Reading rows from `mv_all_legs_reentry`')
     for chunk in fetch_sql_to_dict(SELECT_SQL, chunksize=batch):
         # fetch_sql_to_dict returns list of dict rows per chunk
         rows = chunk

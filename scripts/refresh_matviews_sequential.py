@@ -69,10 +69,36 @@ ORDERED_SQL = [
     'create_mv_rehedge_selected_round1.sql',
     'create_mv_rehedge_leg_round1.sql',
     'create_mv_rehedge_eod_exit_round1.sql',
-    # final aggregation
-    'create_mv_all_legs_round1.sql',
+
     # reentry triggered breakouts
     'create_mv_reentry_triggered_breakouts.sql',
+    # reentry pipeline
+    'create_mv_reentry_base_strike_selection.sql',
+    'create_mv_reentry_legs_and_hedge_legs.sql',
+    'create_mv_reentry_live_prices.sql',
+    'create_mv_reentry_breakout_context.sql',
+    'create_mv_reentry_sl_hits.sql',
+    'create_mv_reentry_sl_executions.sql',
+    'create_mv_reentry_open_legs.sql',
+    'create_mv_reentry_profit_booking.sql',
+    'create_mv_reentry_eod_close.sql',
+    'create_mv_reentry_final_exit.sql',
+    'create_mv_reentry_legs_stats.sql',
+    'create_mv_hedge_reentry_exit_on_all_entry_sl.sql',
+    'create_mv_hedge_reentry_exit_on_partial_conditions.sql',
+    'create_mv_hedge_reentry_closed_legs.sql',
+    'create_mv_hedge_reentry_eod_exit.sql',
+    'create_mv_reentry_exit_on_partial_hedge.sql',
+    'create_mv_double_buy_legs_reentry.sql',
+    # rehedge pipeline
+    'create_mv_rehedge_trigger_reentry.sql',
+    'create_mv_rehedge_candidate_reentry.sql',
+    'create_mv_rehedge_selected_reentry.sql',
+    'create_mv_rehedge_leg_reentry.sql',
+    'create_mv_rehedge_eod_exit_round1.sql',
+    # final aggregation
+    'create_mv_all_legs_round1.sql',
+    'create_mv_all_legs_reentry.sql',
 ]
 
 
