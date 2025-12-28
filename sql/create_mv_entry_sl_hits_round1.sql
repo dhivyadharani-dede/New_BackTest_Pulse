@@ -20,6 +20,7 @@ entry_live_prices AS (
     SELECT *
     FROM mv_live_prices_entry_round1
     WHERE leg_type = 'ENTRY'
+    AND ltp_time > entry_time
 ),
 
 /* =====================================================

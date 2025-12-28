@@ -14,11 +14,11 @@ SELECT
   COALESCE(r.breakout_threshold_pct, s.breakout_threshold_pct/100.0) AS breakout_threshold_pct,
 
   COALESCE(r.sl_type, s.sl_type) AS sl_type,
-  COALESCE(r.sl_percentage, s.sl_percentage/100.0) AS sl_percentage,
-  COALESCE(r.box_sl_trigger_pct, s.box_sl_trigger_pct/100.0) AS box_sl_trigger_pct,
-  COALESCE(r.box_sl_hard_pct, s.box_sl_hard_pct/100.0) AS box_sl_hard_pct,
-  COALESCE(r.width_sl_pct, s.width_sl_pct/100.0) AS width_sl_pct,
-  COALESCE(r.switch_pct, s.switch_pct/100.0) AS switch_pct,
+  COALESCE(r.sl_percentage, s.sl_percentage) AS sl_percentage,
+  COALESCE(r.box_sl_trigger_pct, s.box_sl_trigger_pct) AS box_sl_trigger_pct,
+  COALESCE(r.box_sl_hard_pct, s.box_sl_hard_pct) AS box_sl_hard_pct,
+  COALESCE(r.width_sl_pct, s.width_sl_pct) AS width_sl_pct,
+  COALESCE(r.switch_pct, s.switch_pct) AS switch_pct,
 
   COALESCE(r.num_entry_legs, s.num_entry_legs) AS num_entry_legs,
   COALESCE(r.num_hedge_legs, s.num_hedge_legs) AS num_hedge_legs,
