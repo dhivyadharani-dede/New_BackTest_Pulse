@@ -1,3 +1,4 @@
+DROP MATERIALIZED VIEW IF EXISTS public.mv_reentry_profit_booking CASCADE;
 CREATE MATERIALIZED VIEW mv_reentry_profit_booking AS
 WITH strategy AS (
     SELECT

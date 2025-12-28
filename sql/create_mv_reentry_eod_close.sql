@@ -1,3 +1,4 @@
+DROP MATERIALIZED VIEW IF EXISTS public.mv_reentry_eod_close CASCADE;
 CREATE MATERIALIZED VIEW mv_reentry_eod_close AS
 WITH strategy AS (
     SELECT

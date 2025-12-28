@@ -1,3 +1,4 @@
+DROP MATERIALIZED VIEW IF EXISTS public.mv_reentry_base_strike_selection CASCADE;
 CREATE MATERIALIZED VIEW mv_reentry_base_strike_selection AS
 WITH 
 -- 1️⃣ Only required breakout rows

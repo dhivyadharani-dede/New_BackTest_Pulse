@@ -1,3 +1,4 @@
+DROP MATERIALIZED VIEW IF EXISTS public.mv_reentry_final_exit CASCADE;
 CREATE MATERIALIZED VIEW mv_reentry_final_exit AS
 WITH
 

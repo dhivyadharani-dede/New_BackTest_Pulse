@@ -1,3 +1,4 @@
+DROP MATERIALIZED VIEW IF EXISTS public.mv_all_legs_reentry CASCADE;
 CREATE MATERIALIZED VIEW mv_all_legs_reentry AS
 
 /* =====================================================

@@ -1,3 +1,4 @@
+DROP MATERIALIZED VIEW IF EXISTS public.mv_rehedge_selected_reentry CASCADE;
 CREATE MATERIALIZED VIEW mv_rehedge_selected_reentry AS
 SELECT *
 FROM (

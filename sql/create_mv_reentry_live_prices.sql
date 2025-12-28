@@ -1,3 +1,4 @@
+DROP MATERIALIZED VIEW IF EXISTS public.mv_reentry_live_prices CASCADE;
 CREATE MATERIALIZED VIEW mv_reentry_live_prices AS
 WITH strategy AS (
     SELECT eod_time FROM v_strategy_config

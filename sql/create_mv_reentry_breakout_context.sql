@@ -1,3 +1,4 @@
+DROP MATERIALIZED VIEW IF EXISTS public.mv_reentry_breakout_context CASCADE;
 CREATE MATERIALIZED VIEW mv_reentry_breakout_context AS
 WITH strategy AS (
     SELECT entry_candle FROM v_strategy_config

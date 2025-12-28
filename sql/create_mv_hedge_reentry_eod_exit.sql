@@ -1,3 +1,4 @@
+DROP MATERIALIZED VIEW IF EXISTS public.mv_hedge_reentry_eod_exit CASCADE;
 CREATE MATERIALIZED VIEW mv_hedge_reentry_eod_exit AS
 WITH strategy AS (
     SELECT

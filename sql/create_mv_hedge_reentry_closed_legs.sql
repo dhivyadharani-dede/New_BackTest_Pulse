@@ -1,3 +1,4 @@
+DROP MATERIALIZED VIEW IF EXISTS public.mv_hedge_reentry_closed_legs CASCADE;
 CREATE MATERIALIZED VIEW mv_hedge_reentry_closed_legs AS
 SELECT *
 FROM mv_hedge_reentry_exit_on_all_entry_sl

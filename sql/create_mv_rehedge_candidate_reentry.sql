@@ -1,3 +1,4 @@
+DROP MATERIALIZED VIEW IF EXISTS public.mv_rehedge_candidate_reentry CASCADE;
 CREATE MATERIALIZED VIEW mv_rehedge_candidate_reentry AS
 SELECT
     h.trade_date,
