@@ -69,7 +69,8 @@ ORDERED_SQL = [
     'create_mv_rehedge_selected_round1.sql',
     'create_mv_rehedge_leg_round1.sql',
     'create_mv_rehedge_eod_exit_round1.sql',
-
+    #consolidation
+    'create_mv_all_legs_round1.sql',
     # reentry triggered breakouts
     'create_mv_reentry_triggered_breakouts.sql',
     # reentry pipeline
@@ -95,9 +96,9 @@ ORDERED_SQL = [
     'create_mv_rehedge_candidate_reentry.sql',
     'create_mv_rehedge_selected_reentry.sql',
     'create_mv_rehedge_leg_reentry.sql',
-    'create_mv_rehedge_eod_exit_round1.sql',
+    'create_mv_rehedge_eod_exit_reentry.sql',
     # final aggregation
-    'create_mv_all_legs_round1.sql',
+
     'create_mv_all_legs_reentry.sql',
 ]
 

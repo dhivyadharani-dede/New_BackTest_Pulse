@@ -55,5 +55,8 @@ def execute_sql(sql: str, params: dict | None = None):
     """Execute a SQL statement (DDL/DML). Commits automatically."""
     with get_conn() as conn:
         with conn.cursor() as cur:
-            cur.execute(sql, params or {})
+            if params:
+                cur.execute(sql, params)
+            else:
+                cur.execute(sql)
         conn.commit()
