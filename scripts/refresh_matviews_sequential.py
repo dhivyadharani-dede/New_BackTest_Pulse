@@ -23,6 +23,7 @@ SQL_DIR = repo_root / 'sql'
 # Ordered list of SQL filenames (relative to repo root). Edit if you add new
 # matviews that have dependencies.
 ORDERED_SQL = [
+    'create_v_strategy_config.sql'
     # base tables / filtered views
     'create_heikin_ashi_tables.sql',
     'create_mv_ha_candles.sql',
@@ -100,6 +101,16 @@ ORDERED_SQL = [
     # final aggregation
 
     'create_mv_all_legs_reentry.sql',
+        # stored procedure
+    'sp_run_reentry_loop.sql',
+
+    # additional views
+    'create_mv_entry_leg_live_prices.sql',
+    'create_mv_all_entries_sl_tracking_adjusted.sql',
+    'create_mv_portfolio_mtm_pnl.sql',
+    'create_mv_portfolio_final_pnl.sql',
+
+
 ]
 
 

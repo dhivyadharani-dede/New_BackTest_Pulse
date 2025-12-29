@@ -7,12 +7,16 @@ WITH strategy AS (
         hedge_entry_price_cap
     FROM v_strategy_config
 ),
+current_strategy AS (
+    SELECT strategy_name FROM current_reentry_strategy
+),
 
 /* =========================
    ENTRY LEGS
    ========================= */
 entry_strike_cte AS (
     SELECT 
+        c.strategy_name,
         o.date AS trade_date,
         o.expiry AS expiry_date,
         s.breakout_time,
@@ -27,6 +31,7 @@ entry_strike_cte AS (
         'SELL'::TEXT AS transaction_type
     FROM mv_reentry_base_strike_selection s
     JOIN strategy st ON TRUE
+    JOIN current_strategy c ON TRUE
     JOIN v_nifty_options_filtered o 
       ON o.date   = s.trade_date
      AND o.expiry = s.expiry_date
@@ -105,6 +110,7 @@ selected_hedge_base_strike AS (
    ========================= */
 hedge_strike_cte AS (
     SELECT 
+        c.strategy_name,
         o.date AS trade_date,
         o.expiry AS expiry_date,
         s.breakout_time,
@@ -119,6 +125,7 @@ hedge_strike_cte AS (
         'SELL'::TEXT AS transaction_type
     FROM selected_hedge_base_strike s
     JOIN strategy st ON TRUE
+    JOIN current_strategy c ON TRUE
     JOIN v_nifty_options_filtered o 
       ON o.date   = s.trade_date
      AND o.expiry = s.expiry_date
