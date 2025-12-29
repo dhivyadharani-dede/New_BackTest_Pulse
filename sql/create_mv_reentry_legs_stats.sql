@@ -3,12 +3,12 @@ CREATE MATERIALIZED VIEW mv_reentry_legs_stats AS
 WITH
 
 /* =====================================================
-   ALL LEGS (ROUND 1)
+   ALL LEGS (ROUND 2)
    ===================================================== */
 legs AS (
     SELECT *
     FROM mv_reentry_legs_and_hedge_legs
-    WHERE entry_round = 1
+    WHERE entry_round = 2
 ),
 
 /* =====================================================
@@ -21,9 +21,7 @@ entry_sl_hits AS (
         option_type,
         strike,
         entry_round
-    FROM mv_reentry_eod_close
-    WHERE leg_type = 'RE-ENTRY'
-      AND exit_reason LIKE 'SL_HIT%'
+    FROM mv_reentry_sl_hits
 ),
 
 /* =====================================================

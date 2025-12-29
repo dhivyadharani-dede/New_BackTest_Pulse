@@ -16,7 +16,7 @@ entry_last_sl_time AS (
         expiry_date,
         entry_round,
         MAX(exit_time) AS exit_time
-    FROM mv_reentry_eod_close
+    FROM mv_reentry_sl_executions
     WHERE leg_type = 'RE-ENTRY'
       AND exit_reason LIKE 'SL_%'
     GROUP BY
