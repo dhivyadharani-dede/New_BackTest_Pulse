@@ -3,13 +3,12 @@ CREATE MATERIALIZED VIEW mv_reentry_open_legs AS
 WITH
 
 /* =====================================================
-   ALL ENTRY LEGS (ROUND 2)
+   ALL ENTRY LEGS (RE-ENTRY)
    ===================================================== */
 entry_legs AS (
     SELECT *
     FROM mv_reentry_legs_and_hedge_legs
     WHERE leg_type = 'RE-ENTRY'
-      AND entry_round = 2
 ),
 
 /* =====================================================

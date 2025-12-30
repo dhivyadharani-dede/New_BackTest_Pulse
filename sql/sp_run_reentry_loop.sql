@@ -90,6 +90,9 @@ BEGIN
         -- FINAL CONSOLIDATION
         REFRESH MATERIALIZED VIEW mv_all_legs_reentry;
 
+        -- Refresh triggered breakouts after consolidation
+      --  REFRESH MATERIALIZED VIEW mv_reentry_triggered_breakouts;
+
         /* =================================================
            4. Insert ONLY consolidated re-entry legs
            ================================================= */

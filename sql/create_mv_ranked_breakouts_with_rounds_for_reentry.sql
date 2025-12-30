@@ -26,7 +26,6 @@ filtered_breakouts AS (
          OR (s.reentry_breakout_type = 'pct_based_breakout' AND b.breakout_type IN ('pct_breakout_bullish', 'pct_breakout_bearish','full_body_bullish', 'full_body_bearish'))
       )
       AND r.entry_round = 1
-      AND RIGHT(b.breakout_type, 7) = RIGHT(r.breakout_type, 7)
 ),
 ranked AS (
     SELECT *,
