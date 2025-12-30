@@ -431,5 +431,28 @@ def download_results():
     
     return send_file(output, download_name='strategy_results.xlsx', as_attachment=True)
 
+@app.route('/health')
+def health_check():
+    """Health check endpoint for Docker and monitoring"""
+    try:
+        # Test database connection
+        with get_conn() as conn:
+            with conn.cursor() as cur:
+                cur.execute("SELECT 1")
+                result = cur.fetchone()
+        
+        return jsonify({
+            'status': 'healthy',
+            'database': 'connected',
+            'timestamp': time.time()
+        }), 200
+    except Exception as e:
+        return jsonify({
+            'status': 'unhealthy',
+            'database': 'disconnected',
+            'error': str(e),
+            'timestamp': time.time()
+        }), 503
+
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)

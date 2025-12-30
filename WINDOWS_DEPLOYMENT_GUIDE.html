@@ -1,0 +1,732 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>New_BackTest_Pulse - Windows Deployment Guide</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+
+        .container {
+            background-color: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        h1 {
+            color: #2c3e50;
+            border-bottom: 3px solid #3498db;
+            padding-bottom: 10px;
+            margin-bottom: 30px;
+        }
+
+        h2 {
+            color: #34495e;
+            border-left: 4px solid #3498db;
+            padding-left: 15px;
+            margin-top: 40px;
+            margin-bottom: 20px;
+        }
+
+        h3 {
+            color: #7f8c8d;
+            margin-top: 30px;
+            margin-bottom: 15px;
+        }
+
+        .step {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            position: relative;
+        }
+
+        .step-number {
+            position: absolute;
+            top: -10px;
+            left: 20px;
+            background-color: #3498db;
+            color: white;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        .code-block {
+            background-color: #2c3e50;
+            color: #ecf0f1;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            margin: 10px 0;
+            overflow-x: auto;
+            white-space: pre-wrap;
+        }
+
+        .code-inline {
+            background-color: #ecf0f1;
+            color: #2c3e50;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+        }
+
+        .success {
+            background-color: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 15px 0;
+        }
+
+        .warning {
+            background-color: #fff3cd;
+            border: 1px solid #ffeaa7;
+            color: #856404;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 15px 0;
+        }
+
+        .error {
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 15px 0;
+        }
+
+        .info {
+            background-color: #d1ecf1;
+            border: 1px solid #bee5eb;
+            color: #0c5460;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 15px 0;
+        }
+
+        .file-list {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+
+        .file-list ul {
+            margin: 0;
+            padding-left: 20px;
+        }
+
+        .file-list li {
+            margin: 5px 0;
+        }
+
+        .checklist {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+
+        .checklist ul {
+            margin: 0;
+            padding-left: 20px;
+        }
+
+        .checklist li {
+            margin: 8px 0;
+        }
+
+        .troubleshooting {
+            background-color: #f8f9fa;
+            border-left: 4px solid #dc3545;
+            padding: 15px;
+            margin: 15px 0;
+        }
+
+        .troubleshooting h4 {
+            color: #dc3545;
+            margin-top: 0;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            background-color: white;
+        }
+
+        th, td {
+            border: 1px solid #dee2e6;
+            padding: 12px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .highlight {
+            background-color: #fff3cd;
+            padding: 2px 4px;
+            border-radius: 3px;
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid #dee2e6;
+            color: #6c757d;
+            font-size: 14px;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: #3498db;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            margin: 10px 5px;
+            transition: background-color 0.3s;
+        }
+
+        .btn:hover {
+            background-color: #2980b9;
+        }
+
+        .progress-indicator {
+            display: flex;
+            justify-content: space-between;
+            margin: 30px 0;
+            flex-wrap: wrap;
+        }
+
+        .progress-step {
+            flex: 1;
+            text-align: center;
+            padding: 10px;
+            margin: 5px;
+            background-color: #ecf0f1;
+            border-radius: 5px;
+            min-width: 120px;
+        }
+
+        .progress-step.active {
+            background-color: #3498db;
+            color: white;
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+
+            .container {
+                padding: 20px;
+            }
+
+            .progress-indicator {
+                flex-direction: column;
+            }
+
+            .progress-step {
+                margin: 5px 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 New_BackTest_Pulse - Windows Deployment Guide</h1>
+
+        <div class="info">
+            <strong>Complete Step-by-Step Instructions for Client Machine</strong><br>
+            <strong>Date:</strong> December 30, 2025<br>
+            <strong>Platform:</strong> Windows<br>
+            <strong>Prerequisites:</strong> Python 3.8+ and PostgreSQL installed
+        </div>
+
+        <div class="progress-indicator">
+            <div class="progress-step active">Pre-Check</div>
+            <div class="progress-step">Database Setup</div>
+            <div class="progress-step">Python Environment</div>
+            <div class="progress-step">Dependencies</div>
+            <div class="progress-step">Environment Config</div>
+            <div class="progress-step">Database Init</div>
+            <div class="progress-step">Start App</div>
+            <div class="progress-step">Verify</div>
+        </div>
+
+        <h2>📋 PRE-DEPLOYMENT CHECKLIST</h2>
+
+        <div class="checklist">
+            <h3>✅ Verify Your Environment</h3>
+            <p>Before starting, confirm these are installed:</p>
+
+            <ol>
+                <li><strong>Python 3.8 or higher</strong>
+                    <div class="code-block">python --version</div>
+                    <div class="success">Expected: Python 3.8.x or higher</div>
+                </li>
+
+                <li><strong>PostgreSQL 12 or higher</strong>
+                    <div class="code-block">psql --version</div>
+                    <div class="success">Expected: psql (PostgreSQL) 12.x or higher</div>
+                </li>
+
+                <li><strong>Pip (Python package manager)</strong>
+                    <div class="code-block">pip --version</div>
+                    <div class="success">Expected: pip 20.x or higher</div>
+                </li>
+            </ol>
+        </div>
+
+        <h2>🚀 STEP-BY-STEP DEPLOYMENT PROCESS</h2>
+
+        <div class="step">
+            <div class="step-number">1</div>
+            <h3>Prepare PostgreSQL Database</h3>
+            <p><strong>Action:</strong> Create the required database and user</p>
+
+            <h4>Instructions:</h4>
+            <ol>
+                <li>Open <strong>Command Prompt</strong> as Administrator (Win + R → <code class="code-inline">cmd</code> → Ctrl+Shift+Enter)</li>
+                <li>Connect to PostgreSQL:
+                    <div class="code-block">psql -U postgres</div>
+                </li>
+                <li>If prompted for password, enter your PostgreSQL password</li>
+                <li>Run these SQL commands in the psql shell:
+                    <div class="code-block">CREATE DATABASE "Backtest_Pulse";
+CREATE USER postgres WITH PASSWORD 'Alliswell@28';
+GRANT ALL PRIVILEGES ON DATABASE "Backtest_Pulse" TO postgres;
+ALTER USER postgres CREATEDB;
+\q</div>
+                </li>
+            </ol>
+
+            <div class="success"><strong>Expected Result:</strong> Database created successfully</div>
+
+            <div class="troubleshooting">
+                <h4>🔧 Troubleshooting:</h4>
+                <ul>
+                    <li><strong>"user already exists" error:</strong> Skip CREATE USER line, just run GRANT</li>
+                    <li><strong>Connection fails:</strong> Check PostgreSQL service is running (services.msc)</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="step">
+            <div class="step-number">2</div>
+            <h3>Set Up Project Directory</h3>
+            <p><strong>Action:</strong> Navigate to your project folder</p>
+
+            <h4>Instructions:</h4>
+            <div class="code-block">cd C:\path\to\your\New_BackTest_Pulse\folder</div>
+
+            <div class="warning"><strong>Note:</strong> Replace <code class="code-inline">C:\path\to\your\New_BackTest_Pulse\folder</code> with your actual folder path</div>
+
+            <div class="success"><strong>Expected Result:</strong> Command prompt shows your project directory path</div>
+        </div>
+
+        <div class="step">
+            <div class="step-number">3</div>
+            <h3>Create Python Virtual Environment</h3>
+            <p><strong>Action:</strong> Set up isolated Python environment</p>
+
+            <h4>Instructions:</h4>
+            <div class="code-block"># Create virtual environment
+python -m venv venv
+
+# Activate virtual environment
+venv\Scripts\activate</div>
+
+            <div class="success"><strong>Expected Result:</strong>
+                <ul>
+                    <li><code class="code-inline">(venv)</code> appears at the start of your command prompt</li>
+                    <li>Command prompt shows: <code class="code-inline">(venv) C:\path\to\project&gt;</code></li>
+                </ul>
+            </div>
+
+            <div class="warning"><strong>Important:</strong> Keep this command prompt window open for all subsequent steps</div>
+        </div>
+
+        <div class="step">
+            <div class="step-number">4</div>
+            <h3>Install Python Dependencies</h3>
+            <p><strong>Action:</strong> Install required Python packages</p>
+
+            <h4>Instructions:</h4>
+            <div class="code-block">pip install -r requirements.txt</div>
+
+            <div class="success"><strong>Expected Result:</strong>
+                <ul>
+                    <li>Multiple packages install (takes 1-2 minutes)</li>
+                    <li>No error messages</li>
+                    <li>Final output shows "Successfully installed..."</li>
+                </ul>
+            </div>
+
+            <div class="troubleshooting">
+                <h4>🔧 Troubleshooting:</h4>
+                <ul>
+                    <li><strong>"pip not recognized":</strong> Run <code class="code-inline">python -m pip install -r requirements.txt</code></li>
+                    <li><strong>Network errors:</strong> Check internet connection</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="step">
+            <div class="step-number">5</div>
+            <h3>Configure Environment Variables</h3>
+            <p><strong>Action:</strong> Set database connection parameters</p>
+
+            <h4>Instructions:</h4>
+            <p>In the SAME command prompt, run:</p>
+            <div class="code-block">set PGHOST=localhost
+set PGPORT=5432
+set PGDATABASE=Backtest_Pulse
+set PGUSER=postgres
+set PGPASSWORD=Alliswell@28</div>
+
+            <div class="success"><strong>Expected Result:</strong> No output (variables are set silently)</div>
+
+            <h4>Verification:</h4>
+            <p>Run <code class="code-inline">echo %PGDATABASE%</code> - should show <code class="code-inline">Backtest_Pulse</code></p>
+        </div>
+
+        <div class="step">
+            <div class="step-number">6</div>
+            <h3>Initialize Database Schema</h3>
+            <p><strong>Action:</strong> Create all tables, views, and procedures</p>
+
+            <h4>Option A: Automated (Recommended)</h4>
+            <div class="code-block">deploy-native.bat</div>
+
+            <h4>Option B: Manual SQL Execution</h4>
+            <p>If automated script fails, run these commands individually:</p>
+            <div class="code-block">psql -f sql\create_nifty50.sql
+psql -f sql\create_nifty_options.sql
+psql -f sql\create_strategy_settings.sql
+psql -f sql\create_runtime_strategy_config.sql
+psql -f sql\create_strategy_run_results.sql
+psql -f sql\create_strategy_leg_book.sql
+psql -f sql\create_heikin_ashi_tables.sql
+psql -f sql\create_v_strategy_config.sql
+psql -f sql\create_filtered_views.sql
+psql -f sql\create_mv_ha_candles.sql
+psql -f sql\create_mv_nifty_options_filtered.sql
+psql -f sql\create_mv_all_5min_breakouts.sql
+psql -f sql\create_mv_ranked_breakouts_with_rounds.sql
+psql -f sql\create_mv_ranked_breakouts_with_rounds_for_reentry.sql
+psql -f sql\create_mv_base_strike_selection.sql
+psql -f sql\create_mv_breakout_context_round1.sql
+psql -f sql\create_mv_entry_and_hedge_legs.sql
+psql -f sql\create_mv_live_prices_entry_round1.sql
+psql -f sql\create_mv_entry_sl_hits_round1.sql
+psql -f sql\create_mv_entry_sl_executions_round1.sql
+psql -f sql\create_mv_entry_open_legs_round1.sql
+psql -f sql\create_mv_entry_profit_booking_round1.sql
+psql -f sql\create_mv_entry_eod_close_round1.sql
+psql -f sql\create_mv_entry_closed_legs_round1.sql
+psql -f sql\create_mv_entry_round1_stats.sql
+psql -f sql\create_mv_hedge_exit_on_all_entry_sl.sql
+psql -f sql\create_mv_hedge_exit_partial_conditions.sql
+psql -f sql\create_mv_hedge_closed_legs_round1.sql
+psql -f sql\create_mv_hedge_eod_exit_round1.sql
+psql -f sql\create_mv_entry_exit_on_partial_hedge_round1.sql
+psql -f sql\create_mv_double_buy_legs_round1.sql
+psql -f sql\create_mv_entry_final_exit_round1.sql
+psql -f sql\create_mv_rehedge_trigger_round1.sql
+psql -f sql\create_mv_rehedge_candidate_round1.sql
+psql -f sql\create_mv_rehedge_selected_round1.sql
+psql -f sql\create_mv_rehedge_leg_round1.sql
+psql -f sql\create_mv_rehedge_eod_exit_round1.sql
+psql -f sql\create_mv_all_legs_round1.sql
+psql -f sql\create_mv_reentry_triggered_breakouts.sql
+psql -f sql\create_mv_reentry_base_strike_selection.sql
+psql -f sql\create_mv_reentry_legs_and_hedge_legs.sql
+psql -f sql\create_mv_reentry_live_prices.sql
+psql -f sql\create_mv_reentry_breakout_context.sql
+psql -f sql\create_mv_reentry_sl_hits.sql
+psql -f sql\create_mv_reentry_sl_executions.sql
+psql -f sql\create_mv_reentry_open_legs.sql
+psql -f sql\create_mv_reentry_profit_booking.sql
+psql -f sql\create_mv_reentry_eod_close.sql
+psql -f sql\create_mv_reentry_final_exit.sql
+psql -f sql\create_mv_double_buy_legs_reentry.sql
+psql -f sql\create_mv_reentry_legs_stats.sql
+psql -f sql\create_mv_hedge_reentry_exit_on_all_entry_sl.sql
+psql -f sql\create_mv_hedge_reentry_exit_on_partial_conditions.sql
+psql -f sql\create_mv_hedge_reentry_closed_legs.sql
+psql -f sql\create_mv_hedge_reentry_eod_exit.sql
+psql -f sql\create_mv_reentry_exit_on_partial_hedge.sql
+psql -f sql\create_mv_rehedge_trigger_reentry.sql
+psql -f sql\create_mv_rehedge_candidate_reentry.sql
+psql -f sql\create_mv_rehedge_selected_reentry.sql
+psql -f sql\create_mv_rehedge_leg_reentry.sql
+psql -f sql\create_mv_rehedge_eod_exit_reentry.sql
+psql -f sql\create_mv_all_legs_reentry.sql
+psql -f sql\create_mv_entry_leg_live_prices.sql
+psql -f sql\create_mv_all_entries_sl_tracking_adjusted.sql
+psql -f sql\create_mv_portfolio_mtm_pnl.sql
+psql -f sql\create_mv_portfolio_final_pnl.sql
+psql -f sql\sp_insert_sl_legs_into_book.sql
+psql -f sql\sp_run_reentry_loop.sql
+psql -f sql\sp_run_strategy.sql
+psql -f sql\create_indexes_matviews.sql
+psql -f sql\update_strategy_settings_defaults.sql
+psql -f sql\upsert_runtime_strategy_config_default.sql
+psql -f sql\set_strategy_settings_parent_values.sql
+psql -f sql\get_heikin_ashi.sql</div>
+
+            <div class="success"><strong>Expected Result:</strong>
+                <ul>
+                    <li>Each command runs without errors</li>
+                    <li>Progress through ~50 SQL files</li>
+                    <li>Final message: "Database initialization completed successfully!"</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="step">
+            <div class="step-number">7</div>
+            <h3>Start the Application</h3>
+            <p><strong>Action:</strong> Launch the Flask web application</p>
+
+            <h4>Instructions:</h4>
+            <div class="code-block"># Ensure virtual environment is active (should show (venv))
+# If not, run: venv\Scripts\activate
+
+# Start the application
+python app.py</div>
+
+            <div class="success"><strong>Expected Result:</strong></div>
+            <div class="code-block">* Serving Flask app 'app'
+* Debug mode: on
+* Running on http://127.0.0.1:5000/ (Press CTRL+C to quit)
+* Restarting with stat
+* Debugger is active!
+* Debugger PIN: xxx-xxx-xxx</div>
+        </div>
+
+        <div class="step">
+            <div class="step-number">8</div>
+            <h3>Verify Deployment</h3>
+            <p><strong>Action:</strong> Test that everything works</p>
+
+            <h4>Instructions:</h4>
+            <ol>
+                <li>Open web browser</li>
+                <li>Navigate to: <code class="code-inline">http://localhost:5000</code></li>
+                <li>Check health endpoint: <code class="code-inline">http://localhost:5000/health</code></li>
+            </ol>
+
+            <div class="success"><strong>Expected Results:</strong>
+                <ul>
+                    <li>Web interface loads successfully</li>
+                    <li>Health check returns: <code class="code-inline">{"status": "healthy", "database": "connected"}</code></li>
+                </ul>
+            </div>
+        </div>
+
+        <h2>📁 REQUIRED FILES TO COPY</h2>
+
+        <div class="file-list">
+            <p>Copy these files/folders to your client machine:</p>
+
+            <h3>Core Application Files:</h3>
+            <ul>
+                <li><input type="checkbox"> <code class="code-inline">app.py</code> - Main Flask application</li>
+                <li><input type="checkbox"> <code class="code-inline">requirements.txt</code> - Python dependencies</li>
+                <li><input type="checkbox"> <code class="code-inline">src/db.py</code> - Database connection module</li>
+                <li><input type="checkbox"> <code class="code-inline">src/strategy_executor.py</code> - Strategy execution logic</li>
+                <li><input type="checkbox"> <code class="code-inline">src/backtest.py</code> - CLI backtesting tool</li>
+                <li><input type="checkbox"> <code class="code-inline">src/sim.py</code> - Portfolio simulation logic</li>
+            </ul>
+
+            <h3>Web Interface Files:</h3>
+            <ul>
+                <li><input type="checkbox"> <code class="code-inline">templates/</code> - HTML templates folder</li>
+                <li><input type="checkbox"> <code class="code-inline">static/</code> - CSS/JS assets folder</li>
+            </ul>
+
+            <h3>Database Files:</h3>
+            <ul>
+                <li><input type="checkbox"> <code class="code-inline">sql/</code> - All SQL schema files (50+ files)</li>
+                <li><input type="checkbox"> <code class="code-inline">init-db.sh</code> - Database initialization script</li>
+            </ul>
+
+            <h3>Deployment Scripts:</h3>
+            <ul>
+                <li><input type="checkbox"> <code class="code-inline">deploy-native.bat</code> - Windows deployment automation</li>
+                <li><input type="checkbox"> <code class="code-inline">deploy-native.sh</code> - Linux/macOS deployment automation</li>
+            </ul>
+
+            <h3>Documentation:</h3>
+            <ul>
+                <li><input type="checkbox"> <code class="code-inline">README.md</code> - General documentation</li>
+                <li><input type="checkbox"> <code class="code-inline">NATIVE_DEPLOYMENT.md</code> - Native deployment guide</li>
+                <li><input type="checkbox"> <code class="code-inline">DEPLOYMENT.md</code> - Complete deployment guide</li>
+            </ul>
+
+            <h3>Optional Files:</h3>
+            <ul>
+                <li><input type="checkbox"> <code class="code-inline">examples/</code> - Sample strategy files</li>
+                <li><input type="checkbox"> <code class="code-inline">scripts/</code> - Utility scripts</li>
+                <li><input type="checkbox"> <code class="code-inline">.env.example</code> - Environment template</li>
+            </ul>
+        </div>
+
+        <h2>🔧 TROUBLESHOOTING GUIDE</h2>
+
+        <div class="troubleshooting">
+            <h3>Issue: "psql: command not found"</h3>
+            <p><strong>Solution:</strong></p>
+            <ul>
+                <li>Add PostgreSQL bin folder to PATH</li>
+                <li>Or use full path: <code class="code-inline">"C:\Program Files\PostgreSQL\14\bin\psql.exe"</code></li>
+            </ul>
+        </div>
+
+        <div class="troubleshooting">
+            <h3>Issue: "python: command not found"</h3>
+            <p><strong>Solution:</strong></p>
+            <ul>
+                <li>Use <code class="code-inline">py</code> instead of <code class="code-inline">python</code></li>
+                <li>Or use full path: <code class="code-inline">"C:\Python38\python.exe"</code></li>
+            </ul>
+        </div>
+
+        <div class="troubleshooting">
+            <h3>Issue: Database connection fails</h3>
+            <p><strong>Solution:</strong></p>
+            <div class="code-block"># Test connection
+psql -U postgres -d Backtest_Pulse -c "SELECT 1;"
+
+# Check PostgreSQL service
+services.msc
+# Find "postgresql-x64-14" and ensure it's running</div>
+        </div>
+
+        <div class="troubleshooting">
+            <h3>Issue: Port 5000 already in use</h3>
+            <p><strong>Solution:</strong></p>
+            <div class="code-block"># Find process using port
+netstat -ano | findstr :5000
+
+# Kill the process
+taskkill /PID &lt;PID_NUMBER&gt; /F</div>
+        </div>
+
+        <div class="troubleshooting">
+            <h3>Issue: Virtual environment not activating</h3>
+            <p><strong>Solution:</strong></p>
+            <div class="code-block"># Use full path
+C:\path\to\project\venv\Scripts\activate.bat
+
+# Or run as administrator</div>
+        </div>
+
+        <div class="troubleshooting">
+            <h3>Issue: Pip install fails</h3>
+            <p><strong>Solution:</strong></p>
+            <div class="code-block"># Upgrade pip first
+python -m pip install --upgrade pip
+
+# Then install requirements
+pip install -r requirements.txt</div>
+        </div>
+
+        <h2>✅ SUCCESS VERIFICATION CHECKLIST</h2>
+
+        <div class="checklist">
+            <ul>
+                <li><input type="checkbox"> Python 3.8+ installed and working</li>
+                <li><input type="checkbox"> PostgreSQL installed and service running</li>
+                <li><input type="checkbox"> Database "Backtest_Pulse" created successfully</li>
+                <li><input type="checkbox"> User "postgres" has proper permissions</li>
+                <li><input type="checkbox"> Virtual environment created and activated</li>
+                <li><input type="checkbox"> All Python packages installed without errors</li>
+                <li><input type="checkbox"> Environment variables set correctly</li>
+                <li><input type="checkbox"> All SQL files executed successfully</li>
+                <li><input type="checkbox"> Application starts without errors</li>
+                <li><input type="checkbox"> Web interface accessible at http://localhost:5000</li>
+                <li><input type="checkbox"> Health check returns healthy status</li>
+            </ul>
+        </div>
+
+        <h2>🚀 POST-DEPLOYMENT TASKS</h2>
+
+        <div class="info">
+            <h3>Optional: Load Market Data</h3>
+            <div class="code-block"># Load NIFTY50 data
+python scripts\bulk_load_nifty50.py
+
+# Load NIFTY options data
+python scripts\bulk_load_nifty_options.py
+
+# Compute Heikin-Ashi candles
+python scripts\populate_heikin_ashi.py</div>
+        </div>
+
+        <div class="info">
+            <h3>Optional: Run Backtest</h3>
+            <div class="code-block"># Run backtest with sample strategy
+python -m src.backtest --sql examples/sample_strategy.sql --start 2020-01-01 --end 2020-12-31 --initial-capital 100000</div>
+        </div>
+
+        <h2>📞 SUPPORT INFORMATION</h2>
+
+        <div class="warning">
+            <p>If you encounter issues:</p>
+            <ol>
+                <li><strong>Check the troubleshooting section above</strong></li>
+                <li><strong>Verify all prerequisites are met</strong></li>
+                <li><strong>Share error messages and which step failed</strong></li>
+                <li><strong>Include your Windows version and PostgreSQL/Python versions</strong></li>
+            </ol>
+        </div>
+
+        <div class="success">
+            <h3>💡 Success Path:</h3>
+            <p>Follow steps 1→2→3→4→5→6→7→8 in order<br>
+            Each step builds on the previous one<br>
+            <strong>Don't skip steps or close command prompt windows</strong></p>
+        </div>
+
+        <div class="footer">
+            <p><strong>Document Version:</strong> 1.0<br>
+            <strong>Last Updated:</strong> December 30, 2025<br>
+            <strong>Platform:</strong> Windows 10/11<br>
+            <strong>Tested With:</strong> Python 3.8+, PostgreSQL 14</p>
+
+            <a href="#top" class="btn">Back to Top</a>
+            <a href="NATIVE_DEPLOYMENT.md" class="btn">View Markdown Version</a>
+        </div>
+    </div>
+</body>
+</html>

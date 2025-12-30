@@ -4,29 +4,31 @@ services:
   postgres:
     image: postgres:13
     environment:
-      POSTGRES_DB: backtest_db
-      POSTGRES_USER: user
-      POSTGRES_PASSWORD: pass
+      POSTGRES_DB: Backtest_Pulse
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: Alliswell@28
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./sql:/docker-entrypoint-initdb.d  # Mount SQL files for initialization
+      - ./init-db.sh:/docker-entrypoint-initdb.d/init-db.sh
+      - ./sql:/app/sql
     ports:
       - "5432:5432"
+    command: ["postgres", "-c", "max_connections=200"]
 
   app:
     build: .
     environment:
       - PGHOST=postgres
       - PGPORT=5432
-      - PGDATABASE=backtest_db
-      - PGUSER=user
-      - PGPASSWORD=pass
+      - PGDATABASE=Backtest_Pulse
+      - PGUSER=postgres
+      - PGPASSWORD=Alliswell@28
+      - FLASK_ENV=production
     ports:
       - "5000:5000"
     depends_on:
       - postgres
-    volumes:
-      - .:/app
+    restart: unless-stopped
 
 volumes:
   postgres_data:
