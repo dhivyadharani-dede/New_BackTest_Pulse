@@ -11,7 +11,7 @@ WITH config AS (
 ),
 
 portfolio_mtm_pnl AS (
-    SELECT * FROM mv_portfolio_mtm_pnl where date='2025-04-01'
+    SELECT * FROM mv_portfolio_mtm_pnl --where date='2025-04-01'
 ),
 
 /* ============================================================

@@ -1,6 +1,6 @@
--- Views that expose per-strategy filtered rows using runtime_strategy_config
+-- Materialized views that cache per-strategy filtered rows using runtime_strategy_config
 
-CREATE OR REPLACE VIEW public.v_ha_big_filtered AS
+CREATE MATERIALIZED VIEW IF NOT EXISTS public.v_ha_big_filtered AS
 SELECT
   r.strategy_name,
   h.trade_date,
@@ -18,7 +18,7 @@ JOIN public.runtime_strategy_config r
   ON h.trade_date >= r.from_date
  AND h.trade_date <= r.to_date;
 
-CREATE OR REPLACE VIEW public.v_ha_small_filtered AS
+CREATE MATERIALIZED VIEW IF NOT EXISTS public.v_ha_small_filtered AS
 SELECT
   r.strategy_name,
   h.trade_date,
@@ -36,7 +36,7 @@ JOIN public.runtime_strategy_config r
   ON h.trade_date >= r.from_date
  AND h.trade_date <= r.to_date;
 
-CREATE OR REPLACE VIEW public.v_ha_1m_filtered AS
+CREATE MATERIALIZED VIEW IF NOT EXISTS public.v_ha_1m_filtered AS
 SELECT
   r.strategy_name,
   h.trade_date,
@@ -55,7 +55,7 @@ JOIN public.runtime_strategy_config r
  AND h.trade_date <= r.to_date;
 
 -- Source market data views
-CREATE OR REPLACE VIEW public.v_nifty50_filtered AS
+CREATE MATERIALIZED VIEW IF NOT EXISTS public.v_nifty50_filtered AS
 SELECT
   r.strategy_name,
   m.date,
@@ -72,7 +72,7 @@ JOIN public.runtime_strategy_config r
   ON m.date >= r.from_date
  AND m.date <= r.to_date;
 
-CREATE OR REPLACE VIEW public.v_nifty_options_filtered AS
+CREATE MATERIALIZED VIEW IF NOT EXISTS public.v_nifty_options_filtered AS
 SELECT
   r.strategy_name,
   o.date,

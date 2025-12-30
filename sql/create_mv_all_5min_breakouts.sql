@@ -67,6 +67,7 @@ combined AS (
     WHERE f.candle_time >=
           TIME '09:15:00'
           + (s.entry_candle * s.big_candle_tf || ' minutes')::interval
+      AND f.trade_date BETWEEN s.from_date AND s.to_date
 )
 
 SELECT
@@ -82,7 +83,8 @@ SELECT
     breakout_type
 FROM combined
 JOIN v_strategy_config s ON TRUE
-WHERE breakout_type IS NOT NULL;
+WHERE breakout_type IS NOT NULL
+  AND trade_date BETWEEN s.from_date AND s.to_date;
 
 -- create an index to speed lookups
 CREATE INDEX IF NOT EXISTS idx_mv_all_5min_breakouts_date_time ON public.mv_all_5min_breakouts (trade_date, breakout_time);

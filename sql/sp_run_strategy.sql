@@ -87,10 +87,21 @@ BEGIN
         FROM strategy_settings
         WHERE strategy_name = rec.strategy_name;
 
+        -- CRITICAL: Refresh v_strategy_config before dependent views
+        REFRESH MATERIALIZED VIEW v_strategy_config;
+
+        -- Refresh filtered materialized views (now that they are materialized)
+        REFRESH MATERIALIZED VIEW v_ha_big_filtered;
+        REFRESH MATERIALIZED VIEW v_ha_small_filtered;
+        REFRESH MATERIALIZED VIEW v_ha_1m_filtered;
+        REFRESH MATERIALIZED VIEW v_nifty50_filtered;
+        REFRESH MATERIALIZED VIEW v_nifty_options_filtered;
+
         -- Refresh all relevant materialized views
         REFRESH MATERIALIZED VIEW mv_ha_big_candle;
         REFRESH MATERIALIZED VIEW mv_ha_small_candle;
         REFRESH MATERIALIZED VIEW mv_ha_1m_candle;
+        -- NOTE: v_*_filtered views are regular views, not materialized - they auto-update
         REFRESH MATERIALIZED VIEW mv_nifty_options_filtered;
         REFRESH MATERIALIZED VIEW mv_all_5min_breakouts;
         REFRESH MATERIALIZED VIEW mv_ranked_breakouts_with_rounds;
