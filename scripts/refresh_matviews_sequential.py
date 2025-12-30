@@ -72,6 +72,7 @@ ORDERED_SQL = [
     'create_mv_rehedge_eod_exit_round1.sql',
     #consolidation
     'create_mv_all_legs_round1.sql',
+    'sp_insert_sl_legs_into_book.sql',
     # reentry triggered breakouts
     'create_mv_reentry_triggered_breakouts.sql',
     # reentry pipeline
@@ -101,9 +102,9 @@ ORDERED_SQL = [
     # final aggregation
 
     'create_mv_all_legs_reentry.sql',
+
         # stored procedure
     'sp_run_reentry_loop.sql',
-
     # additional views
     'create_mv_entry_leg_live_prices.sql',
     'create_mv_all_entries_sl_tracking_adjusted.sql',
@@ -164,10 +165,6 @@ def main():
         # refresh any materialized views declared in this SQL file
         for mv in mv_names:
             refresh_matview(mv)
-
-    print('Running insert into strategy_leg_book...')
-    subprocess.check_call([sys.executable, str(repo_root / 'scripts' / 'insert_sl_legs.py')])
-    print('Insert completed.')
 
     print('All done.')
 

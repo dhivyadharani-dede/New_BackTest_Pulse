@@ -29,7 +29,7 @@ SELECT
   leg_type,
   entry_round,
   exit_reason
-FROM mv_all_legs_reentry
+FROM mv_all_legs_pnl_entry_round1
 """
 
 INSERT_SQL = (
