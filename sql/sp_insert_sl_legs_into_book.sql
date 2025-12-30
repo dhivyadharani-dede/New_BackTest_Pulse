@@ -1,10 +1,11 @@
-DELETE FROM strategy_leg_book;
+DELETE FROM strategy_leg_book WHERE strategy_name = 'default';
 ------------------------------------------------------------------------------------------------------------------------------------------------------
-CREATE OR REPLACE PROCEDURE insert_sl_legs_into_book()
+CREATE OR REPLACE PROCEDURE insert_sl_legs_into_book(p_strategy_name TEXT)
 LANGUAGE plpgsql
 AS $$
 BEGIN
     INSERT INTO strategy_leg_book (
+        strategy_name,
         trade_date,
         expiry_date,
         breakout_time,
@@ -20,6 +21,7 @@ BEGIN
         exit_reason
     )
     SELECT 
+        p_strategy_name,
         trade_date,
         expiry_date,
         breakout_time,
@@ -37,7 +39,8 @@ BEGIN
     WHERE NOT EXISTS (
         SELECT 1
         FROM strategy_leg_book b
-        WHERE b.trade_date = sl.trade_date
+        WHERE b.strategy_name = p_strategy_name
+          AND b.trade_date = sl.trade_date
           AND b.expiry_date = sl.expiry_date
           AND b.option_type = sl.option_type
           AND b.strike = sl.strike
@@ -45,9 +48,9 @@ BEGIN
           AND b.leg_type = sl.leg_type
     );
 
-    RAISE NOTICE '✅ SL legs inserted into strategy_leg_book';
+    RAISE NOTICE '✅ SL legs inserted into strategy_leg_book for strategy %', p_strategy_name;
 END;
 $$;
 
 
-CALL insert_sl_legs_into_book();
+CALL insert_sl_legs_into_book('default');

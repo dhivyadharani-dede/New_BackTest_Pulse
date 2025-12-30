@@ -1,6 +1,6 @@
 CREATE MATERIALIZED VIEW mv_entry_leg_live_prices AS
 WITH legs AS (
-    SELECT * FROM mv_all_legs_REENTRY
+    SELECT * FROM mv_all_legs_reentry
     UNION ALL
     SELECT * FROM mv_all_legs_round1
 )

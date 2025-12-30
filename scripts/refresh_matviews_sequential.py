@@ -73,7 +73,6 @@ ORDERED_SQL = [
     #consolidation
     'create_mv_all_legs_round1.sql',
     'sp_insert_sl_legs_into_book.sql',
-    # reentry triggered breakouts
     'create_mv_reentry_triggered_breakouts.sql',
     # reentry pipeline
     'create_mv_reentry_base_strike_selection.sql',
@@ -110,6 +109,9 @@ ORDERED_SQL = [
     'create_mv_all_entries_sl_tracking_adjusted.sql',
     'create_mv_portfolio_mtm_pnl.sql',
     'create_mv_portfolio_final_pnl.sql',
+    'create_strategy_run_results.sql',
+    'sp_run_strategy.sql',
+    'CALL sp_run_strategy();',
 
 
 ]
@@ -151,6 +153,22 @@ def refresh_matview(name: str):
 
 def main():
     for fname in ORDERED_SQL:
+        if fname.startswith('CALL '):
+            # Execute raw SQL
+            sql = fname
+            print(f"Executing raw SQL: {sql}")
+            with get_conn() as conn:
+                with conn.cursor() as cur:
+                    try:
+                        cur.execute(sql)
+                        conn.commit()
+                        print(f"Executed: {sql}")
+                    except Exception as e:
+                        conn.rollback()
+                        print(f"Error executing {sql}: {e}")
+                        raise
+            continue
+
         path = SQL_DIR / fname
         if not path.exists():
             print(f"Skipping missing SQL file: {fname}")

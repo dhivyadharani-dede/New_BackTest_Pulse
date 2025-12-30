@@ -1,0 +1,21 @@
+CREATE TABLE IF NOT EXISTS strategy_run_results (
+    strategy_name TEXT NOT NULL,
+    execution_time TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    trade_date DATE,
+    expiry_date DATE,
+    breakout_time TIME,
+    entry_time TIME,
+    spot_price NUMERIC,
+    option_type TEXT,
+    strike NUMERIC,
+    entry_price NUMERIC,
+    sl_level TEXT,
+    entry_round INTEGER,
+    leg_type TEXT,
+    transaction_type TEXT,
+    exit_time TIME,
+    exit_price NUMERIC,
+    exit_reason TEXT,
+    pnl_amount NUMERIC,
+    total_pnl_per_day NUMERIC
+);
