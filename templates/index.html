@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Backtest Pulse - Strategy Optimizer</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        h1 { color: #333; }
+        h2 { color: #555; margin-top: 30px; }
+        form { margin-bottom: 20px; }
+        button { background-color: #4CAF50; color: white; padding: 10px 15px; border: none; cursor: pointer; margin: 5px; }
+        button:hover { background-color: #45a049; }
+        .template-btn { background-color: #2196F3; }
+        .template-btn:hover { background-color: #0b7dda; }
+        table { border-collapse: collapse; width: 100%; margin: 20px 0; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f2f2f2; }
+        tr:nth-child(even) { background-color: #f9f9f9; }
+        .template-section { background-color: #f5f5f5; padding: 20px; border-radius: 5px; margin: 20px 0; }
+    </style>
+</head>
+<body>
+    <h1>Backtest Pulse - Strategy Optimizer</h1>
+    <p>Upload an Excel file with your strategy settings to run backtests and optimize for live trading.</p>
+    
+    <!-- Progress Section -->
+    <div id="progress-section" style="display: none; background-color: #e8f5e8; border: 1px solid #4CAF50; padding: 15px; border-radius: 5px; margin: 20px 0;">
+        <h3 style="color: #2E7D32; margin-top: 0;">🔄 Backtesting Progress</h3>
+        <div style="margin-bottom: 10px;">
+            <div style="width: 100%; background-color: #f0f0f0; border-radius: 10px; height: 20px;">
+                <div id="progress-bar" style="width: 0%; height: 20px; background-color: #4CAF50; border-radius: 10px; transition: width 0.3s ease;"></div>
+            </div>
+            <div style="text-align: center; margin-top: 5px; font-weight: bold;">
+                <span id="progress-text">0%</span>
+            </div>
+        </div>
+        <div id="progress-message" style="font-size: 14px; color: #555;">Initializing...</div>
+        <div id="current-step" style="font-size: 12px; color: #777; margin-top: 5px;"></div>
+    </div>
+    
+    <h2>Download Template</h2>
+    <p><a href="{{ url_for('download_template') }}">Download CSV Template</a></p>
+    <p>Edit the downloaded CSV file with your custom strategy settings, then upload it below.</p>
+    
+    {% if show_confirm and uploaded_data %}
+    <h2>Review Uploaded Strategies</h2>
+    <div class="template-section">
+        <p>Your uploaded strategy settings:</p>
+        <table>
+            <tr>
+                {% for col in column_names %}
+                <th>{{ col.replace('_', ' ').title() }}</th>
+                {% endfor %}
+            </tr>
+            {% for row in uploaded_data %}
+            <tr>
+                {% for col in column_names %}
+                <td>{{ row[col] }}</td>
+                {% endfor %}
+            </tr>
+            {% endfor %}
+        </table>
+        <br>
+        <a href="{{ url_for('confirm_run') }}">
+            <button style="background-color: #FF9800;">Confirm and Run Backtest</button>
+        </a>
+        <a href="{{ url_for('cancel_upload') }}">
+            <button style="background-color: #f44336;">Cancel Upload</button>
+        </a>
+    </div>
+    {% else %}
+    <h2>Upload Custom CSV</h2>
+    <form action="{{ url_for('upload_file') }}" method="post" enctype="multipart/form-data">
+        <input type="file" name="file" accept=".csv" required>
+        <button type="submit">Upload and Review</button>
+    </form>
+    {% endif %}
+    
+    {% if message %}
+    <p>{{ message }}</p>
+    {% endif %}
+    
+    <script>
+        let progressInterval;
+        
+        function startProgressTracking() {
+            const progressSection = document.getElementById('progress-section');
+            progressSection.style.display = 'block';
+            
+            // Start polling for progress updates
+            progressInterval = setInterval(updateProgress, 1000);
+        }
+        
+        function updateProgress() {
+            fetch('/progress')
+                .then(response => response.json())
+                .then(data => {
+                    const progressBar = document.getElementById('progress-bar');
+                    const progressText = document.getElementById('progress-text');
+                    const progressMessage = document.getElementById('progress-message');
+                    const currentStep = document.getElementById('current-step');
+                    
+                    // Update progress bar
+                    progressBar.style.width = data.progress + '%';
+                    progressText.textContent = data.progress + '%';
+                    
+                    // Update messages
+                    progressMessage.textContent = data.message;
+                    currentStep.textContent = 'Step: ' + data.step.replace('_', ' ').toUpperCase();
+                    
+                    // Change color based on status
+                    if (data.step === 'complete') {
+                        progressBar.style.backgroundColor = '#4CAF50';
+                        clearInterval(progressInterval);
+                        // Redirect to results after completion
+                        setTimeout(() => {
+                            window.location.href = '/results';
+                        }, 2000);
+                    } else if (data.step === 'error') {
+                        progressBar.style.backgroundColor = '#f44336';
+                        clearInterval(progressInterval);
+                    } else {
+                        progressBar.style.backgroundColor = '#4CAF50';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching progress:', error);
+                });
+        }
+        
+        // Start progress tracking when the page loads if we're in a processing state
+        document.addEventListener('DOMContentLoaded', function() {
+            // Check if we should start progress tracking
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('processing') === 'true') {
+                startProgressTracking();
+            }
+        });
+        
+        // Start progress tracking when confirm button is clicked
+        document.addEventListener('click', function(e) {
+            if (e.target && e.target.textContent === 'Confirm and Run Backtest') {
+                startProgressTracking();
+            }
+        });
+    </script>
+</body>
+</html>

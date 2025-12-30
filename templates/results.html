@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Backtest Results - Strategy Optimizer</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        h1 { color: #333; }
+        table { border-collapse: collapse; width: 100%; margin-bottom: 20px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f2f2f2; }
+        button { background-color: #4CAF50; color: white; padding: 10px; border: none; cursor: pointer; margin-right: 10px; }
+        button:hover { background-color: #45a049; }
+    </style>
+</head>
+<body>
+    <h1>Backtest Results</h1>
+    
+    <h2>Strategy Analysis Summary</h2>
+    <table>
+        <tr>
+            <th>Strategy Name</th>
+            <th>Date Range</th>
+            <th>Total Trades</th>
+            <th>Total PnL</th>
+            <th>Win Rate %</th>
+            <th>Avg PnL/Trade</th>
+            <th>Best Trade</th>
+            <th>Worst Trade</th>
+            <th>Max Drawdown</th>
+            <th>Profit Factor</th>
+            <th>Consistency %</th>
+            <th>Live Readiness Score</th>
+        </tr>
+        {% for row in analysis %}
+        <tr>
+            <td>{{ row.strategy_name }}</td>
+            <td>{{ row.start_date }} to {{ row.end_date }}</td>
+            <td>{{ row.total_trades }}</td>
+            <td>{{ "%.2f"|format(row.total_pnl) }}</td>
+            <td>{{ "%.2f"|format(row.win_rate_pct) }}</td>
+            <td>{{ "%.2f"|format(row.avg_pnl_per_trade) }}</td>
+            <td>{{ "%.2f"|format(row.best_trade) }}</td>
+            <td>{{ "%.2f"|format(row.worst_trade) }}</td>
+            <td>{{ "%.2f"|format(row.max_drawdown) }}</td>
+            <td>{{ "%.2f"|format(row.profit_factor) }}</td>
+            <td>{{ "%.2f"|format(row.consistency_pct) }}</td>
+            <td>{{ "%.2f"|format(row.live_readiness_score) }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+    
+    <h2>Top 3 Strategies for Live Trading</h2>
+    <p>Based on Live Readiness Score (higher is better for live deployment).</p>
+    <ol>
+        {% for row in top_strategies %}
+        <li><strong>{{ row.strategy_name }}</strong> - Score: {{ "%.2f"|format(row.live_readiness_score) }} ({{ row.reason }})</li>
+        {% endfor %}
+    </ol>
+    
+    <h2>Download Options</h2>
+    <a href="{{ url_for('download_results') }}"><button>Download Full Results (CSV)</button></a>
+    <a href="{{ url_for('download_analysis') }}"><button>Download Analysis Report (Excel)</button></a>
+    
+    <br><br>
+    <a href="{{ url_for('index') }}"><button>Run Another Backtest</button></a>
+</body>
+</html>

@@ -1,0 +1,32 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:13
+    environment:
+      POSTGRES_DB: backtest_db
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: pass
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./sql:/docker-entrypoint-initdb.d  # Mount SQL files for initialization
+    ports:
+      - "5432:5432"
+
+  app:
+    build: .
+    environment:
+      - PGHOST=postgres
+      - PGPORT=5432
+      - PGDATABASE=backtest_db
+      - PGUSER=user
+      - PGPASSWORD=pass
+    ports:
+      - "5000:5000"
+    depends_on:
+      - postgres
+    volumes:
+      - .:/app
+
+volumes:
+  postgres_data:
