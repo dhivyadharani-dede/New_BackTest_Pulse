@@ -119,6 +119,7 @@ BEGIN
         REFRESH MATERIALIZED VIEW mv_rehedge_leg_round1;
         REFRESH MATERIALIZED VIEW mv_rehedge_eod_exit_round1;
         REFRESH MATERIALIZED VIEW mv_all_legs_round1;
+        CALL insert_sl_legs_into_book(rec.strategy_name);
         REFRESH MATERIALIZED VIEW mv_reentry_triggered_breakouts;
         REFRESH MATERIALIZED VIEW mv_reentry_base_strike_selection;
         REFRESH MATERIALIZED VIEW mv_reentry_legs_and_hedge_legs;
@@ -143,23 +144,52 @@ BEGIN
         REFRESH MATERIALIZED VIEW mv_rehedge_leg_reentry;
         REFRESH MATERIALIZED VIEW mv_rehedge_eod_exit_reentry;
         REFRESH MATERIALIZED VIEW mv_all_legs_reentry;
+        CALL sp_run_reentry_loop(rec.strategy_name);
         REFRESH MATERIALIZED VIEW mv_entry_leg_live_prices;
         REFRESH MATERIALIZED VIEW mv_all_entries_sl_tracking_adjusted;
         REFRESH MATERIALIZED VIEW mv_portfolio_mtm_pnl;
         REFRESH MATERIALIZED VIEW mv_portfolio_final_pnl;
 
-        -- Store final results (assuming a table like strategy_run_results exists)
-        -- Adjust the table name and columns as needed
+        -- Store final results
         INSERT INTO strategy_run_results (
             strategy_name,
-            run_date,
-            final_pnl,
-            -- Add other columns from mv_portfolio_final_pnl
+            trade_date,
+            expiry_date,
+            breakout_time,
+            entry_time,
+            spot_price,
+            option_type,
+            strike,
+            entry_price,
+            sl_level,
+            entry_round,
+            leg_type,
+            transaction_type,
+            exit_time,
+            exit_price,
+            exit_reason,
+            pnl_amount,
+            total_pnl_per_day
         )
         SELECT
             rec.strategy_name,
-            CURRENT_DATE,
-            pnl_amount  -- Adjust based on actual columns
+            trade_date,
+            expiry_date,
+            breakout_time,
+            entry_time,
+            spot_price,
+            option_type,
+            strike,
+            entry_price,
+            sl_level,
+            entry_round,
+            leg_type,
+            transaction_type,
+            exit_time,
+            exit_price,
+            exit_reason,
+            pnl_amount,
+            total_pnl_per_day
         FROM mv_portfolio_final_pnl;
 
         RAISE NOTICE 'Completed run for strategy %', rec.strategy_name;
