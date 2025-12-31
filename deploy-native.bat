@@ -1,8 +1,10 @@
 @echo off
 REM New_BackTest_Pulse Native Deployment Script for Windows
+REM Version 2.0 - Enhanced with Day-wise Analysis & Session Isolation
 REM This script helps deploy the application on Windows systems
+REM Features: Day-wise performance analysis, session-isolated results, Excel reporting
 
-echo 🚀 Starting New_BackTest_Pulse Native Deployment...
+echo 🚀 Starting New_BackTest_Pulse v2.0 Native Deployment...
 
 REM Check if Python is available
 python --version >nul 2>&1
@@ -107,7 +109,13 @@ echo [SUCCESS] Database connection from application successful
 
 REM Show deployment information
 echo.
-echo 🎉 Native deployment completed successfully!
+echo 🎉 New_BackTest_Pulse v2.0 deployment completed successfully!
+echo.
+echo ✨ New Features Available:
+echo   • Day-wise Performance Analysis (Total Trades, PnL, Best/Worst Trade per date)
+echo   • Session-Isolated Results (shows only current backtest data)
+echo   • Enhanced Excel Reports (Daily Analysis, Strategy Summary, Rankings)
+echo   • Clean, focused results display
 echo.
 echo To start the application:
 echo   venv\Scripts\activate.bat

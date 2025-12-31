@@ -1,6 +1,15 @@
 # New_BackTest_Pulse - Native Deployment Guide (Without Docker)
 
+**Version 2.0 - Enhanced with Day-wise Analysis & Session Isolation**
+
 This guide explains how to deploy the New_BackTest_Pulse application directly on your system without using Docker.
+
+## ✨ New Features in v2.0
+
+- **Day-wise Performance Analysis**: Detailed breakdown showing Total Trades, Total PnL, Best Trade, and Worst Trade for each trading date
+- **Session-Isolated Results**: Each backtest shows only current run results (automatic cleanup)
+- **Enhanced Excel Reports**: Multiple sheets with daily analysis, strategy summaries, and rankings
+- **Clean, Focused UI**: Organized results display without historical data clutter
 
 ## Prerequisites
 
@@ -286,7 +295,14 @@ gunicorn --bind 0.0.0.0:5000 --workers 4 app:app
 
 1. **Web Interface**: Open `http://localhost:5000` in your browser
 2. **Health Check**: Visit `http://localhost:5000/health` to verify the application is running
-3. **Database Connection**: The app will connect to PostgreSQL using the environment variables
+3. **Upload Strategy CSV**: Configure multiple strategies and run backtests
+4. **View Day-wise Results**: See detailed performance breakdown by trading date
+5. **Download Excel Reports**: Get comprehensive analysis with daily breakdowns and rankings
+
+### New v2.0 Features Available:
+- **Day-wise Analysis**: Total Trades, Total PnL, Best/Worst Trade per date
+- **Session Isolation**: Clean results for each backtest run
+- **Enhanced Reporting**: Multiple Excel sheets with detailed analysis
 
 ## Configuration
 

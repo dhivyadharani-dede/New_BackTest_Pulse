@@ -1,7 +1,8 @@
 # New_BackTest_Pulse - Windows Deployment Guide
 ## Complete Step-by-Step Instructions for Client Machine
 
-**Date:** December 30, 2025  
+**Date:** December 31, 2025  
+**Version:** 2.0 - Enhanced with Day-wise Analysis & Session Isolation  
 **Platform:** Windows  
 **Prerequisites:** Python 3.8+ and PostgreSQL installed
 
@@ -269,6 +270,34 @@ python app.py
 **Expected Results:**
 - Web interface loads successfully
 - Health check returns: `{"status": "healthy", "database": "connected"}`
+
+---
+
+## 🎯 APPLICATION FEATURES & RECENT UPDATES
+
+### ✅ Current Application Capabilities
+
+**Updated as of December 31, 2025**
+
+#### 📊 Results Display Features:
+- **Day-wise Performance Summary**: Shows detailed breakdown by trading date instead of date ranges
+- **Current Run Focus**: Displays only results from the most recent backtest session (clears previous results automatically)
+- **Key Metrics per Day**: Total Trades, Total PnL, Best Trade, Worst Trade for each strategy on each trading date
+
+#### 🔄 Session Management:
+- **Clean Results per Upload**: Each CSV upload starts with a fresh results slate
+- **Automatic Cleanup**: Previous backtest results are cleared when starting new sessions
+- **Isolated Analysis**: Compare different strategy configurations without historical data interference
+
+#### 📈 Enhanced Reporting:
+- **Excel Downloads**: Multiple sheets including Daily Analysis, Strategy Summary, and Rankings
+- **Top Strategy Rankings**: Based on total PnL performance across all trading days
+- **Comprehensive Data Export**: Full results, daily breakdowns, and performance rankings
+
+#### 🎨 User Interface:
+- **Progress Tracking**: Real-time progress updates during backtest execution
+- **File Upload**: CSV-based strategy configuration upload
+- **Results Visualization**: Clean, organized tables showing day-by-day performance
 
 ---
 

@@ -1,11 +1,13 @@
 #!/bin/bash
 
 # New_BackTest_Pulse Native Deployment Script
+# Version 2.0 - Enhanced with Day-wise Analysis & Session Isolation
 # This script helps deploy the application on systems without Docker
+# Features: Day-wise performance analysis, session-isolated results, Excel reporting
 
 set -e
 
-echo "🚀 Starting New_BackTest_Pulse Native Deployment..."
+echo "🚀 Starting New_BackTest_Pulse v2.0 Native Deployment..."
 
 # Colors for output
 RED='\033[0;31m'
@@ -183,7 +185,13 @@ with get_conn() as conn:
 # Show deployment information
 show_info() {
     echo ""
-    print_success "🎉 Native deployment completed successfully!"
+    print_success "🎉 New_BackTest_Pulse v2.0 deployment completed successfully!"
+    echo ""
+    echo "✨ New Features Available:"
+    echo "  • Day-wise Performance Analysis (Total Trades, PnL, Best/Worst Trade per date)"
+    echo "  • Session-Isolated Results (shows only current backtest data)"
+    echo "  • Enhanced Excel Reports (Daily Analysis, Strategy Summary, Rankings)"
+    echo "  • Clean, focused results display"
     echo ""
     echo "To start the application:"
     echo "  source venv/bin/activate"

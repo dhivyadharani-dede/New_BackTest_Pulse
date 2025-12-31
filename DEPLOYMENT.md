@@ -130,11 +130,13 @@ python app.py
 - **Stored Procedures**: Automated backtesting workflows
 
 ### Key Features
-- ✅ Date-range filtered backtesting
-- ✅ Real-time portfolio calculations
-- ✅ Multiple strategy support
-- ✅ Re-entry logic
-- ✅ Risk management (SL, hedging)
+- ✅ **Day-wise Performance Analysis**: Detailed breakdown by trading date with Total Trades, Total PnL, Best/Worst Trade per day
+- ✅ **Session-Isolated Results**: Shows only current backtest run results (automatic cleanup of previous data)
+- ✅ **Real-time Portfolio Calculations**: Live P&L tracking and risk management
+- ✅ **Multiple Strategy Support**: Upload and compare multiple strategy configurations
+- ✅ **Advanced Re-entry Logic**: Automated position management and hedging
+- ✅ **Comprehensive Risk Management**: Stop-loss, hedging, and portfolio-level controls
+- ✅ **Excel Report Generation**: Multiple sheets with daily analysis, strategy summaries, and rankings
 
 ## 🔧 Configuration
 
@@ -162,10 +164,11 @@ The PostgreSQL container is configured with:
 
 ### Web Interface
 1. Access http://localhost:5000
-2. Upload market data (Nifty50, Nifty Options)
-3. Configure strategy parameters
-4. Run backtests with custom date ranges
-5. Analyze results and performance metrics
+2. Upload strategy configuration CSV files
+3. Configure backtest parameters
+4. Run backtests with automated execution
+5. **View day-wise performance breakdown** with detailed metrics per trading date
+6. **Download comprehensive Excel reports** with daily analysis and strategy rankings
 
 ### API Endpoints
 - `GET /` - Main dashboard

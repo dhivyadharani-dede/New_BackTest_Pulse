@@ -1,44 +1,60 @@
 # New_BackTest_Pulse — Postgres-backed backtester
 
-This repository contains a minimal, scalable backtesting scaffold that executes strategy logic in Postgres (SQL) and simulates trades in Python. The goal is to let Postgres handle heavy data joins/aggregations and keep Python for simulation and reporting.
+This repository contains a comprehensive backtesting platform for options trading strategies. It executes strategy logic in Postgres (SQL) for optimal performance and provides a web interface for easy analysis with **day-wise performance breakdowns**.
 
-Getting started
+## 🚀 Quick Start
 
-1. Create a Python venv and install dependencies:
-
+### Web Application (Recommended)
 ```powershell
-python -m venv .venv
-.\.venv\Scripts\Activate.ps1
+# Install dependencies
 pip install -r requirements.txt
-```
 
-2. Set Postgres connection environment variables:
-
-```powershell
+# Set database environment variables
 $env:PGHOST='localhost'
 $env:PGPORT='5432'
-$env:PGDATABASE='backtest_db'
-$env:PGUSER='user'
-$env:PGPASSWORD='pass'
+$env:PGDATABASE='Backtest_Pulse'
+$env:PGUSER='postgres'
+$env:PGPASSWORD='Alliswell@28'
+
+# Run the web application
+python app.py
 ```
 
-3. Run a backtest using your SQL file that produces signal rows (timestamp, symbol, signal, price, size):
+Access the web interface at: http://localhost:5000
 
+### CLI Backtesting
 ```powershell
 python -m src.backtest --sql ./examples/sample_strategy.sql --start 2020-01-01 --end 2020-12-31 --initial-capital 100000
 ```
 
-Files of interest
+## 🎯 Key Features
 
-- `src/db.py` — Postgres connection helpers and helpers to run SQL files.
-- `src/strategy_executor.py` — Loads and runs user SQL, returns `pandas.DataFrame` signals.
-- `src/sim.py` — Lightweight event-driven simulator that consumes signals and updates portfolio.
-- `src/backtest.py` — CLI orchestration.
+- **Day-wise Performance Analysis**: Detailed breakdown showing Total Trades, Total PnL, Best Trade, and Worst Trade for each trading date
+- **Session-Isolated Results**: Each backtest run shows only its own results (automatic cleanup)
+- **Web Interface**: User-friendly upload and analysis interface
+- **Excel Report Generation**: Comprehensive downloads with daily analysis and strategy rankings
+- **PostgreSQL Optimization**: Heavy computations handled in SQL for maximum performance
 
-Notes
+## 📁 Files of interest
 
-- This scaffold expects the heavy lifting (joins, aggregations, indicator calculations) to be expressed in SQL so Postgres processes millions of rows efficiently.
-- Provide your SQL that returns ordered signals with at least: `ts` (timestamp), `symbol`, `signal` (buy/sell/close), `price`, and optional `size`.
+- `app.py` — Main Flask web application with day-wise analysis
+- `src/db.py` — Postgres connection helpers and helpers to run SQL files
+- `src/strategy_executor.py` — Loads and runs user SQL, returns `pandas.DataFrame` signals
+- `src/sim.py` — Lightweight event-driven simulator that consumes signals and updates portfolio
+- `src/backtest.py` — CLI orchestration for direct SQL-based backtesting
+
+## 📊 Web Application Usage
+
+1. **Upload Strategy CSV**: Configure multiple strategies in a CSV file
+2. **Run Backtest**: Automated execution with real-time progress tracking
+3. **View Results**: Day-by-day performance breakdown for each strategy
+4. **Download Reports**: Excel files with detailed analysis and rankings
+
+## 🔧 Technical Notes
+
+- This platform expects heavy data processing (joins, aggregations, indicator calculations) to be expressed in SQL for optimal Postgres performance
+- Each backtest session is isolated - results are cleared between runs for focused analysis
+- The web interface provides day-wise breakdowns instead of aggregated date ranges
 
 Please provide your SQL file or point to where it's stored so I can adapt the executor for any expected parameters or temp tables.
 

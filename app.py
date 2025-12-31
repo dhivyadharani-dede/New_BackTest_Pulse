@@ -163,6 +163,12 @@ def process_uploaded_csv(df):
         
         update_progress('running_backtest', 'Running backtesting algorithms...', 70)
         
+        # Clear previous results before running new backtest
+        with get_conn() as conn:
+            with conn.cursor() as cur:
+                cur.execute("DELETE FROM strategy_run_results")
+                conn.commit()
+        
         # Run the strategy
         with get_conn() as conn:
             with conn.cursor() as cur:
@@ -196,6 +202,15 @@ def upload_file():
         file.save(filepath)
         
         try:
+            # Clear any previous results before processing new upload
+            try:
+                with get_conn() as conn:
+                    with conn.cursor() as cur:
+                        cur.execute("DELETE FROM strategy_run_results")
+                        conn.commit()
+            except:
+                pass  # Ignore errors if table doesn't exist or connection fails
+            
             # Read the CSV file
             df = pd.read_csv(filepath)
             
@@ -254,6 +269,16 @@ def cancel_upload():
     # Clear uploaded file from session
     session.pop('uploaded_file', None)
     session.pop('progress', None)  # Also clear any progress data
+    
+    # Clear any previous results
+    try:
+        with get_conn() as conn:
+            with conn.cursor() as cur:
+                cur.execute("DELETE FROM strategy_run_results")
+                conn.commit()
+    except:
+        pass  # Ignore errors if table doesn't exist or connection fails
+    
     flash('Upload cancelled. You can now upload a new file.')
     return redirect(url_for('index'))
 
@@ -264,157 +289,107 @@ def results():
         # Get all results
         results_df = pd.read_sql("SELECT * FROM strategy_run_results ORDER BY strategy_name, trade_date", conn)
         
-        # Analysis: Per-strategy metrics
+        # Analysis: Daily metrics per strategy
         analysis_query = """
-        WITH daily_pnl AS (
-            SELECT 
-                strategy_name,
-                trade_date,
-                SUM(pnl_amount) as daily_pnl
-            FROM strategy_run_results 
-            GROUP BY strategy_name, trade_date
-        ),
-        cumulative_pnl AS (
-            SELECT 
-                strategy_name,
-                trade_date,
-                SUM(daily_pnl) OVER (PARTITION BY strategy_name ORDER BY trade_date) as cumulative_pnl
-            FROM daily_pnl
-        ),
-        running_max AS (
-            SELECT 
-                strategy_name,
-                trade_date,
-                MAX(cumulative_pnl) OVER (PARTITION BY strategy_name ORDER BY trade_date ROWS UNBOUNDED PRECEDING) as running_max
-            FROM cumulative_pnl
-        ),
-        drawdown AS (
-            SELECT 
-                c.strategy_name,
-                MAX(CASE WHEN r.running_max - c.cumulative_pnl > 0 THEN r.running_max - c.cumulative_pnl ELSE 0 END) as max_drawdown
-            FROM cumulative_pnl c
-            JOIN running_max r ON c.strategy_name = r.strategy_name AND c.trade_date = r.trade_date
-            GROUP BY c.strategy_name
-        ),
-        metrics AS (
-            SELECT
-                r.strategy_name,
-                COUNT(*) as total_trades,
-                SUM(r.pnl_amount) as total_pnl,
-                AVG(r.pnl_amount) as avg_pnl_per_trade,
-                SUM(CASE WHEN r.pnl_amount > 0 THEN 1 ELSE 0 END) * 100.0 / COUNT(*) as win_rate_pct,
-                MIN(r.pnl_amount) as worst_trade,
-                MAX(r.pnl_amount) as best_trade,
-                MIN(r.trade_date) as start_date,
-                MAX(r.trade_date) as end_date,
-                -- Sharpe Ratio removed as requested
-                -- (AVG(d.daily_pnl) / NULLIF(STDDEV(d.daily_pnl), 0)) * SQRT(252) as sharpe_ratio,
-                dd.max_drawdown,
-                NULLIF(SUM(CASE WHEN r.pnl_amount > 0 THEN r.pnl_amount ELSE 0 END), 0) / 
-                NULLIF(ABS(SUM(CASE WHEN r.pnl_amount < 0 THEN r.pnl_amount ELSE 0 END)), 0) as profit_factor,
-                SUM(CASE WHEN d.daily_pnl > 0 THEN 1 ELSE 0 END) * 100.0 / COUNT(DISTINCT d.trade_date) as consistency_pct
-            FROM strategy_run_results r
-            LEFT JOIN daily_pnl d ON r.strategy_name = d.strategy_name
-            LEFT JOIN drawdown dd ON r.strategy_name = dd.strategy_name
-            GROUP BY r.strategy_name, dd.max_drawdown
-        )
-        SELECT 
-            *,
-            -- Live Readiness Score: weighted average, removed Sharpe, adjusted weights
-            CASE 
-                WHEN ((1 - COALESCE(max_drawdown / NULLIF(total_pnl, 0), 0)) * 0.4 + 
-                      win_rate_pct / 100 * 0.3 + 
-                      CASE WHEN profit_factor > 1 THEN 1 ELSE COALESCE(profit_factor, 0) END * 0.2 + 
-                      consistency_pct / 100 * 0.1) * 100 > 100 THEN 100
-                WHEN ((1 - COALESCE(max_drawdown / NULLIF(total_pnl, 0), 0)) * 0.4 + 
-                      win_rate_pct / 100 * 0.3 + 
-                      CASE WHEN profit_factor > 1 THEN 1 ELSE COALESCE(profit_factor, 0) END * 0.2 + 
-                      consistency_pct / 100 * 0.1) * 100 < 0 THEN 0
-                ELSE ((1 - COALESCE(max_drawdown / NULLIF(total_pnl, 0), 0)) * 0.4 + 
-                      win_rate_pct / 100 * 0.3 + 
-                      CASE WHEN profit_factor > 1 THEN 1 ELSE COALESCE(profit_factor, 0) END * 0.2 + 
-                      consistency_pct / 100 * 0.1) * 100
-            END as live_readiness_score
-        FROM metrics
-        ORDER BY live_readiness_score DESC
+        SELECT
+            r.strategy_name,
+            r.trade_date,
+            COUNT(*) as total_trades,
+            SUM(r.pnl_amount) as total_pnl,
+            MIN(r.pnl_amount) as worst_trade,
+            MAX(r.pnl_amount) as best_trade
+        FROM strategy_run_results r
+        GROUP BY r.strategy_name, r.trade_date
+        ORDER BY r.strategy_name, r.trade_date
         """
         analysis_df = pd.read_sql(analysis_query, conn)
         
+        # Calculate overall strategy performance for top strategies
+        overall_query = """
+        SELECT
+            strategy_name,
+            SUM(total_trades) as total_trades,
+            SUM(total_pnl) as total_pnl,
+            AVG(total_pnl) as avg_daily_pnl,
+            COUNT(DISTINCT trade_date) as trading_days
+        FROM (
+            SELECT
+                r.strategy_name,
+                r.trade_date,
+                COUNT(*) as total_trades,
+                SUM(r.pnl_amount) as total_pnl
+            FROM strategy_run_results r
+            GROUP BY r.strategy_name, r.trade_date
+        ) daily
+        GROUP BY strategy_name
+        ORDER BY total_pnl DESC
+        """
+        overall_df = pd.read_sql(overall_query, conn)
+        
         # Top 3 strategies
-        top_strategies = analysis_df.head(3).to_dict('records')
+        top_strategies = overall_df.head(3).to_dict('records')
         for row in top_strategies:
-            row['reason'] = f"High live readiness score ({row['live_readiness_score']:.1f}) with {row['win_rate_pct']:.1f}% win rate"
+            row['reason'] = f"High total PnL (₹{row['total_pnl']:.2f}) over {int(row['trading_days'])} trading days"
     
     return render_template('results.html', results=results_df, analysis=analysis_df.to_dict('records'), top_strategies=top_strategies)
 
 @app.route('/download_analysis')
 def download_analysis():
     with get_conn() as conn:
-        # Reuse the analysis query
-        analysis_query = """
-        WITH daily_pnl AS (
-            SELECT 
-                strategy_name,
-                trade_date,
-                SUM(pnl_amount) as daily_pnl
-            FROM strategy_run_results 
-            GROUP BY strategy_name, trade_date
-        ),
-        cumulative_pnl AS (
-            SELECT 
-                strategy_name,
-                trade_date,
-                SUM(daily_pnl) OVER (PARTITION BY strategy_name ORDER BY trade_date) as cumulative_pnl
-            FROM daily_pnl
-        ),
-        metrics AS (
+        # Daily analysis query
+        daily_query = """
+        SELECT
+            r.strategy_name,
+            r.trade_date,
+            COUNT(*) as total_trades,
+            SUM(r.pnl_amount) as total_pnl,
+            MIN(r.pnl_amount) as worst_trade,
+            MAX(r.pnl_amount) as best_trade
+        FROM strategy_run_results r
+        GROUP BY r.strategy_name, r.trade_date
+        ORDER BY r.strategy_name, r.trade_date
+        """
+        daily_df = pd.read_sql(daily_query, conn)
+        
+        # Overall strategy summary
+        overall_query = """
+        SELECT
+            strategy_name,
+            SUM(total_trades) as total_trades,
+            SUM(total_pnl) as total_pnl,
+            AVG(total_pnl) as avg_daily_pnl,
+            COUNT(DISTINCT trade_date) as trading_days
+        FROM (
             SELECT
                 r.strategy_name,
+                r.trade_date,
                 COUNT(*) as total_trades,
-                SUM(r.pnl_amount) as total_pnl,
-                AVG(r.pnl_amount) as avg_pnl_per_trade,
-                SUM(CASE WHEN r.pnl_amount > 0 THEN 1 ELSE 0 END) * 100.0 / COUNT(*) as win_rate_pct,
-                MIN(r.pnl_amount) as worst_trade,
-                MAX(r.pnl_amount) as best_trade,
-                MIN(r.trade_date) as start_date,
-                MAX(r.trade_date) as end_date,
-                (AVG(d.daily_pnl) / NULLIF(STDDEV(d.daily_pnl), 0)) * SQRT(252) as sharpe_ratio,
-                MIN(c.cumulative_pnl) as max_drawdown,
-                NULLIF(SUM(CASE WHEN r.pnl_amount > 0 THEN r.pnl_amount ELSE 0 END), 0) / 
-                NULLIF(ABS(SUM(CASE WHEN r.pnl_amount < 0 THEN r.pnl_amount ELSE 0 END)), 0) as profit_factor,
-                SUM(CASE WHEN d.daily_pnl > 0 THEN 1 ELSE 0 END) * 100.0 / COUNT(DISTINCT d.trade_date) as consistency_pct
+                SUM(r.pnl_amount) as total_pnl
             FROM strategy_run_results r
-            LEFT JOIN daily_pnl d ON r.strategy_name = d.strategy_name
-            LEFT JOIN cumulative_pnl c ON r.strategy_name = c.strategy_name
-            GROUP BY r.strategy_name
-        )
-        SELECT 
-            *,
-            (COALESCE(sharpe_ratio, 0) * 0.3 + 
-             (1 - COALESCE(ABS(max_drawdown) / NULLIF(total_pnl, 0), 1)) * 0.3 + 
-             win_rate_pct / 100 * 0.2 + 
-             COALESCE(profit_factor, 0) / 2 * 0.1 + 
-             consistency_pct / 100 * 0.1) * 100 as live_readiness_score
-        FROM metrics
-        ORDER BY live_readiness_score DESC
+            GROUP BY r.strategy_name, r.trade_date
+        ) daily
+        GROUP BY strategy_name
+        ORDER BY total_pnl DESC
         """
-        analysis_df = pd.read_sql(analysis_query, conn)
+        overall_df = pd.read_sql(overall_query, conn)
+        
         results_df = pd.read_sql("SELECT * FROM strategy_run_results ORDER BY strategy_name, trade_date", conn)
     
     output = io.BytesIO()
     with pd.ExcelWriter(output, engine='openpyxl') as writer:
         results_df.to_excel(writer, index=False, sheet_name='Full Results')
-        analysis_df.to_excel(writer, index=False, sheet_name='Strategy Analysis')
+        daily_df.to_excel(writer, index=False, sheet_name='Daily Analysis')
+        overall_df.to_excel(writer, index=False, sheet_name='Strategy Summary')
         
-        # Rankings sheet
-        top_5 = analysis_df.head(5).copy()
+        # Rankings sheet based on total PnL
+        top_5 = overall_df.head(5).copy()
         top_5['Rank'] = range(1, len(top_5) + 1)
         top_5['Type'] = 'Top'
-        bottom_5 = analysis_df.tail(5).copy()
-        bottom_5['Rank'] = range(len(analysis_df) - 4, len(analysis_df) + 1)
+        bottom_5 = overall_df.tail(5).copy()
+        bottom_5['Rank'] = range(len(overall_df) - 4, len(overall_df) + 1)
         bottom_5['Type'] = 'Bottom'
         rankings = pd.concat([top_5, bottom_5])
-        rankings[['Rank', 'strategy_name', 'live_readiness_score', 'Type']].to_excel(writer, index=False, sheet_name='Rankings')
+        rankings[['Rank', 'strategy_name', 'total_pnl', 'Type']].to_excel(writer, index=False, sheet_name='Rankings')
     
     output.seek(0)
     return send_file(output, download_name='strategy_analysis.xlsx', as_attachment=True)
