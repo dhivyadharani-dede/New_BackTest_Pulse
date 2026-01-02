@@ -43,8 +43,8 @@ if __name__ == '__main__':
     # default range: last 12 months
     from datetime import datetime
     today = datetime.utcnow().date()
-    start = (today.replace(day=1) - timedelta(days=365))
-    end = today
+    start = date(2018, 1, 1)
+    end = date(2025, 12, 1)
 
     # ensure parent tables exist by applying SQL file
     create_tables_sql = Path(repo_root) / 'sql' / 'create_heikin_ashi_tables.sql'

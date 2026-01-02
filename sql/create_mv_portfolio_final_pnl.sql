@@ -2,8 +2,8 @@ CREATE MATERIALIZED VIEW mv_portfolio_final_pnl AS
 WITH config AS (
     SELECT 
         portfolio_capital,
-        ROUND(portfolio_profit_target_pct / 100, 3) AS portfolio_profit_target_pct,
-        ROUND(portfolio_stop_loss_pct  / 100, 3) AS portfolio_stop_loss_pct,
+        portfolio_profit_target_pct  AS portfolio_profit_target_pct,
+        portfolio_stop_loss_pct AS  portfolio_stop_loss_pct,
         no_of_lots,
         lot_size,
         eod_time
