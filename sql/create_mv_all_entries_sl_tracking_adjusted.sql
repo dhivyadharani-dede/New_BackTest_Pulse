@@ -59,6 +59,7 @@ adjusted_exit_price_data AS (
      AND p.option_type = l.option_type
      AND p.strike      = l.strike
      AND p.ltp_time    = l.adjusted_exit_time
+     WHERE l.adjusted_exit_time>l.entry_time
 )
 
 SELECT DISTINCT ON (
