@@ -147,54 +147,7 @@ BEGIN
 
  
    
-        INSERT INTO strategy_leg_book (
-            strategy_name,
-            trade_date,
-            expiry_date,
-            breakout_time,
-            entry_time,
-            exit_time,
-          --  spot_price,
-            option_type,
-            strike,
-            entry_price,
-            exit_price,
-            transaction_type,
-            leg_type,
-            entry_round,
-            exit_reason
-        )
-        SELECT
-            p_strategy_name,
-            r.trade_date,
-            r.expiry_date,
-            r.breakout_time,
-            r.entry_time,
-            r.exit_time,
-         --   r.spot_price,
-            r.option_type,
-            r.strike,
-            r.entry_price,
-            r.exit_price,
-            r.transaction_type,
-            r.leg_type,
-            r.entry_round,
-            r.exit_reason
-        FROM mv_all_legs_reentry r
-        WHERE r.entry_round = v_current_round + 1
-          AND NOT EXISTS (
-              SELECT 1
-              FROM strategy_leg_book b
-              WHERE b.strategy_name = p_strategy_name
-                AND b.trade_date    = r.trade_date
-                AND b.expiry_date   = r.expiry_date
-                AND b.option_type   = r.option_type
-                AND b.strike        = r.strike
-                AND b.entry_round   = r.entry_round
-                AND b.leg_type      = r.leg_type
-          );
-
-        GET DIAGNOSTICS v_inserted_rows = ROW_COUNT;
+   
 
         /* =================================================
            5. Stop if nothing new is generated
@@ -226,4 +179,10 @@ EXCEPTION
 END;
 $$;
 
-CALL sp_run_reentry_loop('default');
+DO $$
+DECLARE
+    strat_name TEXT;
+BEGIN
+    SELECT strategy_name INTO strat_name FROM v_strategy_config LIMIT 1;
+    CALL sp_run_reentry_loop(strat_name);
+END $$;

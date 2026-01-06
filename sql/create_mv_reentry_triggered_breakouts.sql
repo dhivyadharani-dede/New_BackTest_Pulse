@@ -18,7 +18,7 @@ first_sl_hit AS (
         expiry_date,
         entry_round,
         MIN(exit_time) AS first_sl_exit_time
-    FROM public.mv_all_legs_round1
+    FROM public.strategy_leg_book
     WHERE exit_reason LIKE 'SL_HIT_%'
     GROUP BY trade_date, expiry_date, entry_round
 ),

@@ -1,9 +1,9 @@
-DELETE FROM strategy_leg_book WHERE strategy_name = 'default';
-------------------------------------------------------------------------------------------------------------------------------------------------------
+-- DELETE FROM strategy_leg_book WHERE strategy_name = 'default';
 CREATE OR REPLACE PROCEDURE insert_sl_legs_into_book(p_strategy_name TEXT)
 LANGUAGE plpgsql
 AS $$
 BEGIN
+   -- DELETE FROM strategy_leg_book;
     INSERT INTO strategy_leg_book (
         strategy_name,
         trade_date,
@@ -53,4 +53,10 @@ END;
 $$;
 
 
-CALL insert_sl_legs_into_book('default');
+DO $$
+DECLARE
+    strat_name TEXT;
+BEGIN
+    SELECT strategy_name INTO strat_name FROM v_strategy_config LIMIT 1;
+    CALL insert_sl_legs_into_book(strat_name);
+END $$;
