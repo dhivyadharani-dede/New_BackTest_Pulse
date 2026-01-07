@@ -21,12 +21,26 @@ filtered_breakouts AS (
     JOIN public.mv_ranked_breakouts_with_rounds r
       ON b.trade_date = r.trade_date
     WHERE b.breakout_type IS NOT NULL
-      AND (
-            (s.reentry_breakout_type = 'full_candle_breakout' AND b.breakout_type IN ('full_body_bullish', 'full_body_bearish'))
-         OR (s.reentry_breakout_type = 'pct_based_breakout' AND b.breakout_type IN ('pct_breakout_bullish', 'pct_breakout_bearish','full_body_bullish', 'full_body_bearish'))
+  AND r.entry_round = 1
+  AND (
+        (
+            s.reentry_breakout_type = 'full_candle_breakout'
+            AND (
+                    (r.breakout_type LIKE '%bullish' AND b.breakout_type LIKE '%bullish')
+                 OR (r.breakout_type LIKE '%bearish' AND b.breakout_type LIKE '%bearish')
+                )
+        )
+     OR (
+            s.reentry_breakout_type = 'pct_based_breakout'
+            AND (
+                    (r.breakout_type LIKE '%bullish' AND b.breakout_type LIKE '%bullish')
+                 OR (r.breakout_type LIKE '%bearish' AND b.breakout_type LIKE '%bearish')
+                )
+        )
       )
-      AND r.entry_round = 1
-),
+
+)
+,
 ranked AS (
     SELECT *,
         ROW_NUMBER() OVER (PARTITION BY trade_date ORDER BY breakout_time) AS entry_round
