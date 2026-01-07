@@ -1,4 +1,4 @@
--- Materialized view: re-entry triggered breakouts
+--Materialized view: re-entry triggered breakouts
 DROP MATERIALIZED VIEW IF EXISTS public.mv_reentry_triggered_breakouts CASCADE;
 CREATE MATERIALIZED VIEW IF NOT EXISTS public.mv_reentry_triggered_breakouts AS
 WITH config AS (
@@ -18,10 +18,13 @@ first_sl_hit AS (
         expiry_date,
         entry_round,
         MIN(exit_time) AS first_sl_exit_time
-    FROM public.strategy_leg_book
+--FROM public.mv_all_legs_round1
+FROM strategy_leg_book
     WHERE exit_reason LIKE 'SL_HIT_%'
     GROUP BY trade_date, expiry_date, entry_round
-),
+)
+--SELECT * FROM first_sl_hit 
+ ,
 
 /* =====================================================
    STEP 2: CALCULATE SCAN START TIME (NEXT 5-MIN CANDLE)
@@ -40,7 +43,10 @@ scan_start_time AS (
     FROM first_sl_hit f
     JOIN config c ON TRUE
     WHERE f.entry_round < c.max_reentry_rounds
-),
+)
+-- * FROM scan_start_time where trade_Date='2025-05-13'
+,
+
 
 /* =====================================================
    STEP 3: FIND NEXT VALID BREAKOUT AFTER SL
@@ -61,7 +67,7 @@ ranked_next_breakouts AS (
       ON b.trade_date = s.trade_date
      AND b.breakout_time >= s.scan_start_time
 )
-
+--SELECT * FROM ranked_next_breakouts where trade_Date='2025-05-13'
 /* =====================================================
    STEP 4: PICK FIRST BREAKOUT FOR EACH RE-ENTRY ROUND
    ===================================================== */
@@ -75,4 +81,4 @@ SELECT
 FROM ranked_next_breakouts
 WHERE rn = 1;
 
-CREATE INDEX IF NOT EXISTS idx_mv_reentry_triggered_breakouts_date_round ON public.mv_reentry_triggered_breakouts (trade_date, entry_round);
+--CREATE INDEX IF NOT EXISTS idx_mv_reentry_triggered_breakouts_date_round ON public.mv_reentry_triggered_breakouts (trade_date, entry_round);
