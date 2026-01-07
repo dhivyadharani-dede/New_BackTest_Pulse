@@ -85,7 +85,7 @@ strike_candidates AS (
 ranked_strikes AS (
     SELECT *,
            ROW_NUMBER() OVER (
-               PARTITION BY trade_date, expiry_date
+               PARTITION BY trade_date, expiry_date,entry_round
                ORDER BY priority, premium_diff
            ) AS rn
     FROM strike_candidates
