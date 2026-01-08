@@ -51,7 +51,7 @@ adjusted_exit_time_data AS (
 adjusted_exit_price_data AS (
     SELECT
         l.*,
-        COALESCE(p.option_open, l.exit_price) AS adjusted_exit_price
+        COALESCE(l.exit_price,p.option_high ) AS adjusted_exit_price
     FROM adjusted_exit_time_data l
     LEFT JOIN mv_entry_leg_live_prices p
       ON p.trade_date  = l.trade_date

@@ -2,8 +2,7 @@ DROP MATERIALIZED VIEW IF EXISTS public.mv_reentry_sl_executions CASCADE;
 CREATE MATERIALIZED VIEW mv_reentry_sl_executions AS
 WITH strategy AS (
     SELECT
-        no_of_lots,
-        lot_size
+     *
     FROM v_strategy_config
 ),
 
@@ -41,10 +40,36 @@ sl_executed AS (
         'RE-ENTRY'::TEXT AS leg_type,
         lp.transaction_type,
         lp.ltp_time AS exit_time,
-        lp.option_close AS exit_price,
+CASE
+            WHEN sh.exit_reason = 'SL_HIT_REGULAR_SL'
+                THEN ROUND(lp.entry_price * (1 + s.sl_percentage), 2)
+
+            WHEN sh.exit_reason = 'SL_HIT_BOX_HARD_SL'
+                THEN ROUND(lp.entry_price * (1 + s.box_sl_hard_pct), 2)
+
+            WHEN sh.exit_reason = 'SL_HIT_BOX_TRIGGER_SL'
+                THEN ROUND(lp.entry_price * (1 + s.box_sl_trigger_pct), 2)
+
+            ELSE lp.option_high
+        END AS exit_price,     
         sh.exit_reason,
         ROUND(
-            (lp.entry_price - lp.option_close)
+            (
+                lp.entry_price
+                -
+                CASE
+                    WHEN sh.exit_reason = 'SL_HIT_REGULAR_SL'
+                        THEN ROUND(lp.entry_price * (1 + s.sl_percentage), 2)
+
+                    WHEN sh.exit_reason = 'SL_HIT_BOX_HARD_SL'
+                        THEN ROUND(lp.entry_price * (1 + s.box_sl_hard_pct), 2)
+
+                    WHEN sh.exit_reason = 'SL_HIT_BOX_TRIGGER_SL'
+                        THEN ROUND(lp.entry_price * (1 + s.box_sl_trigger_pct), 2)
+
+                    ELSE lp.option_close
+                END
+            )
             * s.lot_size
             * s.no_of_lots,
             2
