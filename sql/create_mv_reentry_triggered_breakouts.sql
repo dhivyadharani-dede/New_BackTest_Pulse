@@ -66,6 +66,22 @@ ranked_next_breakouts AS (
     JOIN scan_start_time s
       ON b.trade_date = s.trade_date
      AND b.breakout_time >= s.scan_start_time
+     JOIN config c on True
+	WHERE
+        (
+            c.reentry_breakout_type = 'full_candle_breakout'
+            AND b.breakout_type IN ('full_body_bullish', 'full_body_bearish')
+        )
+        OR
+        (
+           c.reentry_breakout_type = 'pct_based_breakout'
+            AND b.breakout_type IN (
+                'pct_breakout_bullish',
+                'pct_breakout_bearish',
+                'full_body_bullish',
+                'full_body_bearish'
+            )
+        )
 )
 --SELECT * FROM ranked_next_breakouts where trade_Date='2025-05-13'
 /* =====================================================

@@ -1,4 +1,4 @@
--- DELETE FROM strategy_leg_book WHERE strategy_name = 'default';
+DELETE FROM strategy_leg_book;
 CREATE OR REPLACE PROCEDURE insert_sl_legs_into_book(p_strategy_name TEXT)
 LANGUAGE plpgsql
 AS $$
