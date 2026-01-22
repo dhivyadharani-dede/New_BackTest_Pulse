@@ -51,7 +51,13 @@ adjusted_exit_time_data AS (
 adjusted_exit_price_data AS (
     SELECT
         l.*,
-        COALESCE(l.exit_price,p.option_high ) AS adjusted_exit_price
+        CASE
+    WHEN adjusted_exit_reason = 'Closed due to re-entry'
+        THEN p.option_open
+    ELSE
+        l.exit_price
+END AS adjusted_exit_price
+        -- COALESCE(p.option_open,l.exit_price) AS adjusted_exit_price
     FROM adjusted_exit_time_data l
     LEFT JOIN mv_entry_leg_live_prices p
       ON p.trade_date  = l.trade_date
@@ -92,4 +98,4 @@ FROM adjusted_exit_price_data
 JOIN config ON TRUE
 --where trade_date='2025-04-03'
 ORDER BY
-    trade_date, expiry_date,entry_time,entry_round,leg_type, option_type, strike;
+    trade_date, expiry_date,entry_time, option_type, strike, leg_type, entry_round, adjusted_exit_time;

@@ -85,10 +85,28 @@ hedge_prices AS (
     SELECT *
     FROM mv_reentry_live_prices
     WHERE leg_type = 'HEDGE-RE-ENTRY'
+),
+
+/* =====================================================
+   6. ENTRY LEGS (FOR CORRESPONDING EXITS)
+   ===================================================== */
+entry_legs AS (
+    SELECT *
+    FROM mv_reentry_legs_and_hedge_legs
+    WHERE leg_type = 'RE-ENTRY'
+),
+
+/* =====================================================
+   7. ENTRY LIVE PRICES (EXIT PRICE)
+   ===================================================== */
+entry_prices AS (
+    SELECT *
+    FROM mv_reentry_live_prices
+    WHERE leg_type = 'RE-ENTRY'
 )
 
 /* =====================================================
-   6. FINAL HEDGE EXIT (PARTIAL CONDITIONS)
+   8. FINAL HEDGE EXIT (PARTIAL CONDITIONS)
    ===================================================== */
 SELECT
     h.trade_date,
@@ -137,7 +155,59 @@ JOIN hedge_prices p
 
 JOIN strategy s ON TRUE
 
+UNION ALL
+
+/* =====================================================
+   9. FINAL ENTRY EXIT (CORRESPONDING TO HEDGE EXITS)
+   ===================================================== */
+SELECT
+    en.trade_date,
+    en.expiry_date,
+    en.breakout_time,
+    en.entry_time,
+    en.spot_price,
+    en.option_type,
+    en.strike,
+
+    /* true entry price */
+    en.entry_price,
+
+    0 AS sl_level,
+    en.entry_round,
+    'RE-ENTRY'::TEXT AS leg_type,
+    en.transaction_type,
+
+    e.exit_time,
+
+    /* entry price at exit minute */
+    ep.option_open AS exit_price,
+
+    e.exit_reason,
+
+    ROUND(
+        (ep.option_open - en.entry_price)
+        * s.lot_size
+        * s.no_of_lots,
+        2
+    ) AS pnl_amount
+
+FROM earliest_exit e
+JOIN entry_legs en
+  ON en.trade_date  = e.trade_date
+ AND en.expiry_date = e.expiry_date
+ AND en.entry_round = e.entry_round
+
+JOIN entry_prices ep
+  ON ep.trade_date  = en.trade_date
+ AND ep.expiry_date = en.expiry_date
+ AND ep.option_type = en.option_type
+ AND ep.strike      = en.strike
+ AND ep.entry_round = en.entry_round
+ AND ep.ltp_time    = e.exit_time
+
+JOIN strategy s ON TRUE
+
 ORDER BY
-    h.trade_date,
-    h.expiry_date,
-    e.exit_time;
+    trade_date,
+    expiry_date,
+    exit_time;

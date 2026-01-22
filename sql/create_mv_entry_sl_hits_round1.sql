@@ -82,7 +82,8 @@ box_trigger_sl AS (
         t.option_type,
         t.strike,
         t.entry_round,
-        MIN(t.ltp_time) AS exit_time,
+        --MIN(t.ltp_time) AS exit_time,
+        MIN(t.ltp_time) + INTERVAL '5 minutes' AS exit_time,
         'SL_HIT_BOX_TRIGGER_SL' AS exit_reason
     FROM box_trigger_price_hit t
     JOIN mv_breakout_context_round1 nr
