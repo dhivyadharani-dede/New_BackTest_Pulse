@@ -7,7 +7,8 @@ WITH strategy AS (
 SELECT
     x.trade_date,
     x.ha_high AS breakout_high,
-    x.ha_low  AS breakout_low
+    x.ha_low  AS breakout_low,
+    '1' AS temp_entry_round
 FROM (
     SELECT 
         trade_date,

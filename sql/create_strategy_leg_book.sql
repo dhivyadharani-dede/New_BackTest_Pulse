@@ -1,5 +1,6 @@
 -- Create strategy_leg_book table if it does not exist
 CREATE TABLE IF NOT EXISTS public.strategy_leg_book (
+    strategy_name text COLLATE pg_catalog."default" NOT NULL,
     trade_date date NOT NULL,
     expiry_date date NOT NULL,
     breakout_time time without time zone,
@@ -13,5 +14,5 @@ CREATE TABLE IF NOT EXISTS public.strategy_leg_book (
     leg_type text COLLATE pg_catalog."default" NOT NULL,
     entry_round integer NOT NULL DEFAULT 1,
     exit_reason text COLLATE pg_catalog."default",
-    CONSTRAINT strategy_leg_book_pkey PRIMARY KEY (trade_date, expiry_date, strike, option_type, entry_round, leg_type)
+    CONSTRAINT strategy_leg_book_pkey PRIMARY KEY (strategy_name,trade_date, expiry_date, strike, option_type, entry_round, leg_type,exit_reason)
 );

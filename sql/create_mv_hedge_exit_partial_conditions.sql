@@ -1,6 +1,6 @@
--- Materialized view: hedge exit partial conditions
 DROP MATERIALIZED VIEW IF EXISTS public.mv_hedge_exit_partial_conditions CASCADE;
-CREATE MATERIALIZED VIEW IF NOT EXISTS public.mv_hedge_exit_partial_conditions AS
+CREATE MATERIALIZED VIEW public.mv_hedge_exit_partial_conditions AS
+
 WITH strategy AS (
     SELECT
         hedge_exit_entry_ratio,
@@ -71,7 +71,7 @@ earliest_exit AS (
 ),
 
 /* =====================================================
-   4. ACTUAL HEDGE LEGS (TRUE ENTRY PRICE)
+   4. HEDGE LEGS
    ===================================================== */
 hedge_legs AS (
     SELECT *
@@ -80,16 +80,34 @@ hedge_legs AS (
 ),
 
 /* =====================================================
-   5. HEDGE LIVE PRICES (EXIT PRICE)
+   5. HEDGE LIVE PRICES
    ===================================================== */
 hedge_prices AS (
     SELECT *
     FROM mv_live_prices_entry_round1
     WHERE leg_type = 'HEDGE'
+),
+
+/* =====================================================
+   6. ENTRY LEGS (FOR CORRESPONDING EXIT)
+   ===================================================== */
+entry_legs AS (
+    SELECT *
+    FROM mv_entry_and_hedge_legs
+    WHERE leg_type = 'ENTRY'
+),
+
+/* =====================================================
+   7. ENTRY LIVE PRICES
+   ===================================================== */
+entry_prices AS (
+    SELECT *
+    FROM mv_live_prices_entry_round1
+    WHERE leg_type = 'ENTRY'
 )
 
 /* =====================================================
-   6. FINAL HEDGE EXIT (PARTIAL CONDITIONS)
+   8. FINAL HEDGE EXIT (PARTIAL CONDITIONS)
    ===================================================== */
 SELECT
     h.trade_date,
@@ -100,19 +118,14 @@ SELECT
     h.option_type,
     h.strike,
 
-    /* true hedge entry price */
     h.entry_price,
-
     0 AS sl_level,
     h.entry_round,
     'HEDGE'::TEXT AS leg_type,
     h.transaction_type,
 
     e.exit_time,
-
-    /* hedge price at exit minute */
     p.option_open AS exit_price,
-
     e.exit_reason,
 
     ROUND(
@@ -138,9 +151,54 @@ JOIN hedge_prices p
 
 JOIN strategy s ON TRUE
 
-ORDER BY
-    h.trade_date,
-    h.expiry_date,
-    e.exit_time;
+UNION ALL
 
-CREATE INDEX IF NOT EXISTS idx_mv_hedge_exit_partial_conditions_date ON public.mv_hedge_exit_partial_conditions (trade_date, expiry_date);
+/* =====================================================
+   9. FINAL ENTRY EXIT (CORRESPONDING TO HEDGE EXIT)
+   ===================================================== */
+SELECT
+    en.trade_date,
+    en.expiry_date,
+    en.breakout_time,
+    en.entry_time,
+    en.spot_price,
+    en.option_type,
+    en.strike,
+
+    en.entry_price,
+    0 AS sl_level,
+    en.entry_round,
+    'ENTRY'::TEXT AS leg_type,
+    en.transaction_type,
+
+    e.exit_time,
+    ep.option_open AS exit_price,
+    e.exit_reason,
+
+    ROUND(
+        (ep.option_open - en.entry_price)
+        * s.lot_size
+        * s.no_of_lots,
+        2
+    ) AS pnl_amount
+
+FROM earliest_exit e
+JOIN entry_legs en
+  ON en.trade_date  = e.trade_date
+ AND en.expiry_date = e.expiry_date
+ AND en.entry_round = e.entry_round
+
+JOIN entry_prices ep
+  ON ep.trade_date  = en.trade_date
+ AND ep.expiry_date = en.expiry_date
+ AND ep.option_type = en.option_type
+ AND ep.strike      = en.strike
+ AND ep.entry_round = en.entry_round
+ AND ep.ltp_time    = e.exit_time
+
+JOIN strategy s ON TRUE
+
+ORDER BY
+    trade_date,
+    expiry_date,
+    exit_time;
