@@ -70,6 +70,15 @@ box_trigger_price_hit AS (
     WHERE s.sl_type = 'box_with_buffer_sl'
       AND lp.option_high >= ROUND(lp.entry_price * (1 + s.box_sl_trigger_pct), 2)
 )	,
+option_universe AS (
+    SELECT DISTINCT
+        trade_date,
+        expiry_date,
+        option_type,
+        strike,
+        entry_round
+    FROM box_trigger_price_hit
+),
 trigger_times AS (
     SELECT
         t.trade_date,
@@ -77,27 +86,32 @@ trigger_times AS (
         t.option_type,
         t.strike,
         t.entry_round,
-        MIN(t.ltp_time) AS trigger_time
+        t.ltp_time AS trigger_time,
+		/* previous completed 5-min candle for this LTP */
+        date_trunc('minute',  t.ltp_time)
+        - (EXTRACT(minute FROM  t.ltp_time)::int % 5) * INTERVAL '1 minute'
+        - INTERVAL '5 minutes'
+        AS prev_candle_time
     FROM box_trigger_price_hit t
-    GROUP BY
-        t.trade_date,
-        t.expiry_date,
-        t.option_type,
-        t.strike,
-        t.entry_round
+   
 )
-,-- SELECt * FROM trigger_times where trade_date='2025-09-29'
-breakout_confirm_candles AS (
+--SELECt * FROM trigger_times where trade_date in ('2025-09-29','2025-04-30')
+,
+breakout_candles AS (
     SELECT
         tr.trade_date,
         tr.expiry_date,
         tr.option_type,
         tr.strike,
         tr.entry_round,
-        n.candle_time AS confirm_candle_time
-    FROM trigger_times tr
+        n.candle_time,
+        n.ha_open,
+        n.ha_close,
+        nr.breakout_high,
+        nr.breakout_low
+    FROM v_ha_small_filtered n 
 
-    JOIN v_ha_small_filtered n
+    JOIN option_universe tr
       ON n.trade_date = tr.trade_date
 
     JOIN mv_breakout_context_round1 nr
@@ -107,66 +121,51 @@ breakout_confirm_candles AS (
     JOIN strategy s ON TRUE
 
     WHERE
-        /* only candles AFTER trigger bucket */
-       n.candle_time >=
-    date_trunc('minute', tr.trigger_time)
-    + (5 - (EXTRACT(minute FROM tr.trigger_time)::int % 5)) % 5
-      * INTERVAL '1 minute'
-
-        /* OPTION-3 confirmation logic */
+        s.preferred_breakout_type = 'pct_based_breakout'
         AND (
-            s.preferred_breakout_type = 'pct_based_breakout'
-            AND (
-                (tr.option_type = 'P'
-                 AND ((nr.breakout_high - LEAST(n.ha_open, n.ha_close))::numeric
-                      / NULLIF(ABS(n.ha_open - n.ha_close), 0)) >= s.switch_pct)
-                OR
-                (tr.option_type = 'C'
-                 AND ((GREATEST(n.ha_open, n.ha_close) - nr.breakout_low)::numeric
-                      / NULLIF(ABS(n.ha_open - n.ha_close), 0)) >= s.switch_pct)
+            /* PUT breakout */
+            (
+                tr.option_type = 'P'
+                AND ((nr.breakout_high - LEAST(n.ha_open, n.ha_close))::numeric
+                     / NULLIF(ABS(n.ha_open - n.ha_close), 0)) >= s.switch_pct
+            )
+            OR
+            /* CALL breakout */
+            (
+                tr.option_type = 'C'
+                AND ((GREATEST(n.ha_open, n.ha_close) - nr.breakout_low)::numeric
+                     / NULLIF(ABS(n.ha_open - n.ha_close), 0)) >= s.switch_pct
             )
         )
 )
-,-- SELECT * FROM breakout_confirm_candles where trade_date='2025-09-29'
-first_confirm_candle AS (
-    SELECT DISTINCT ON (
-        trade_date,
-        expiry_date,
-        option_type,
-        strike,
-        entry_round
-    )
-        trade_date,
-        expiry_date,
-        option_type,
-        strike,
-        entry_round,
-        confirm_candle_time
-    FROM breakout_confirm_candles
-    ORDER BY
-        trade_date,
-        expiry_date,
-        option_type,
-        strike,
-        entry_round,
-        confirm_candle_time
-)
-,  -- SELECT * FROM first_confirm_candle where trade_date='2025-09-29'
- box_trigger_sl AS (
-    SELECT
-        fc.trade_date,
-        fc.expiry_date,
-        fc.option_type,
-        fc.strike,
-        fc.entry_round,
+-- SELECT * FROM breakout_candles where trade_date in ('2025-09-29','2025-04-30')
+,
 
-        /* 🔑 exit at candle close */
-        (fc.confirm_candle_time ) AS exit_time,
-
-        'SL_HIT_BOX_TRIGGER_SL' AS exit_reason
-    FROM first_confirm_candle fc
+box_trigger_sl AS (
+    SELECT  distinct on (        
+		l.trade_date,
+        l.expiry_date,
+        l.option_type,
+        l.strike,
+        l.entry_round
+         )
+        l.trade_date,
+        l.expiry_date,
+        l.option_type,
+        l.strike,
+        l.entry_round,
+        l.trigger_time AS exit_time,
+		'SL_HIT_BOX_TRIGGER_SL' AS exit_reason
+    FROM trigger_times l
+    JOIN breakout_candles bc
+      ON bc.trade_date  = l.trade_date
+     AND bc.expiry_date = l.expiry_date
+     AND bc.option_type = l.option_type
+     AND bc.strike      = l.strike
+     AND bc.entry_round = l.entry_round
+     AND bc.candle_time = l.prev_candle_time
+	 order by l.trade_date,l.expiry_date,l.option_type,l.strike,l.entry_round,l.trigger_time
 )
-	-- SELECT * from box_trigger_sl where trade_date='2025-09-29'
 	,
 
 /* =====================================================
