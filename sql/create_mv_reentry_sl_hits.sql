@@ -38,6 +38,7 @@ regular_sl AS (
     JOIN strategy s ON TRUE
     WHERE s.sl_type = 'regular_system_sl'
       AND lp.option_high >= ROUND(lp.entry_price * (1 + s.sl_percentage), 2)
+       AND ltp_time > entry_time	
     GROUP BY trade_date, expiry_date, option_type, strike, entry_round
 ),
 
@@ -57,6 +58,7 @@ box_hard_sl AS (
     JOIN strategy s ON TRUE
     WHERE s.sl_type = 'box_with_buffer_sl'
       AND lp.option_high >= ROUND(lp.entry_price * (1 + s.box_sl_hard_pct), 2)
+       AND ltp_time > entry_time	
     GROUP BY trade_date, expiry_date, option_type, strike, entry_round
 ),
 
@@ -69,6 +71,7 @@ box_trigger_price_hit AS (
     JOIN strategy s ON TRUE
     WHERE s.sl_type = 'box_with_buffer_sl'
       AND lp.option_high >= ROUND(lp.entry_price * (1 + s.box_sl_trigger_pct), 2)
+       AND ltp_time > entry_time	
 )	,
 option_universe AS (
     SELECT DISTINCT
@@ -216,9 +219,32 @@ all_sl AS (
     SELECT * FROM box_trigger_sl
     UNION ALL
     SELECT * FROM box_width_sl
+),
+
+ranked_sl AS (
+    SELECT
+        *,
+        ROW_NUMBER() OVER (
+            PARTITION BY
+                trade_date,
+                expiry_date,
+                option_type,
+                strike,
+                entry_round
+            ORDER BY
+                exit_time,
+                CASE exit_reason
+                    WHEN 'SL_HIT_BOX_HARD_SL'    THEN 1
+                    WHEN 'SL_HIT_BOX_TRIGGER_SL' THEN 2
+                    WHEN 'SL_HIT_BOX_WIDTH_SL'   THEN 3
+                    WHEN 'SL_HIT_REGULAR_SL'     THEN 4
+                    ELSE 99
+                END
+        ) AS rn
+    FROM all_sl
 )
 
-SELECT DISTINCT ON (trade_date, expiry_date, option_type, strike, entry_round)
+SELECT
     trade_date,
     expiry_date,
     option_type,
@@ -226,11 +252,5 @@ SELECT DISTINCT ON (trade_date, expiry_date, option_type, strike, entry_round)
     entry_round,
     exit_time,
     exit_reason
-FROM all_sl
-ORDER BY
-    trade_date,
-    expiry_date,
-    option_type,
-    strike,
-    entry_round,
-    exit_time;
+FROM ranked_sl
+WHERE rn = 1;

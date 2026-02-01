@@ -3,7 +3,7 @@ CREATE OR REPLACE PROCEDURE insert_sl_legs_into_book(p_strategy_name TEXT)
 LANGUAGE plpgsql
 AS $$
 BEGIN
-   -- DELETE FROM strategy_leg_book;
+    DELETE FROM strategy_leg_book WHERE strategy_name = p_strategy_name;
     INSERT INTO strategy_leg_book (
         strategy_name,
         trade_date,

@@ -219,9 +219,32 @@ all_sl AS (
     SELECT * FROM box_trigger_sl
     UNION ALL
     SELECT * FROM box_width_sl
+),
+
+ranked_sl AS (
+    SELECT
+        *,
+        ROW_NUMBER() OVER (
+            PARTITION BY
+                trade_date,
+                expiry_date,
+                option_type,
+                strike,
+                entry_round
+            ORDER BY
+                exit_time,
+                CASE exit_reason
+                    WHEN 'SL_HIT_BOX_HARD_SL'    THEN 1
+                    WHEN 'SL_HIT_BOX_TRIGGER_SL' THEN 2
+                    WHEN 'SL_HIT_BOX_WIDTH_SL'   THEN 3
+                    WHEN 'SL_HIT_REGULAR_SL'     THEN 4
+                    ELSE 99
+                END
+        ) AS rn
+    FROM all_sl
 )
 
-SELECT DISTINCT ON (trade_date, expiry_date, option_type, strike, entry_round)
+SELECT
     trade_date,
     expiry_date,
     option_type,
@@ -229,11 +252,5 @@ SELECT DISTINCT ON (trade_date, expiry_date, option_type, strike, entry_round)
     entry_round,
     exit_time,
     exit_reason
-FROM all_sl --where trade_date in ('2025-09-29','2025-04-30') 
-ORDER BY
-    trade_date,
-    expiry_date,
-    option_type,
-    strike,
-    entry_round,
-    exit_time;
+FROM ranked_sl
+WHERE rn = 1;

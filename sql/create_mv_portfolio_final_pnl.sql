@@ -234,4 +234,4 @@ SELECT
     ) AS total_pnl_per_day
 FROM ranked_legs
 WHERE rn = 1
-ORDER BY trade_date, expiry_date, entry_time, option_type, strike;
+ORDER BY trade_date, expiry_date, entry_time, option_type, leg_type,strike;

@@ -399,9 +399,34 @@ def download_results():
     with get_conn() as conn:
         df = pd.read_sql("SELECT * FROM strategy_run_results ORDER BY strategy_name, trade_date", conn)
     
+    # Compute no trade dates for each strategy
+    no_trade_dates = []
+    for strategy_name in df['strategy_name'].unique():
+        strategy_df = df[df['strategy_name'] == strategy_name].copy()
+        if not strategy_df.empty:
+            # Ensure trade_date is date object for comparison
+            strategy_df['trade_date'] = pd.to_datetime(strategy_df['trade_date']).dt.date
+            min_date = min(strategy_df['trade_date'])
+            max_date = max(strategy_df['trade_date'])
+            # Generate date range as date objects
+            all_dates = [d.date() for d in pd.date_range(start=min_date, end=max_date, freq='D')]
+            existing_dates = set(strategy_df['trade_date'])
+            missing_dates = [d for d in all_dates if d not in existing_dates]
+            for md in missing_dates:
+                no_trade_dates.append({'strategy_name': strategy_name, 'no_trade_date': md})
+    
+    no_trade_df = pd.DataFrame(no_trade_dates)
+    
     output = io.BytesIO()
     with pd.ExcelWriter(output, engine='openpyxl') as writer:
-        df.to_excel(writer, index=False, sheet_name='Results')
+        for strategy_name, group_df in df.groupby('strategy_name'):
+            # Sort the data for each strategy sheet
+            group_df = group_df.sort_values(by=['trade_date', 'expiry_date', 'entry_time', 'option_type', 'leg_type', 'strike'])
+            # Sanitize sheet name: replace invalid characters and limit length
+            safe_sheet_name = strategy_name.replace('/', '_').replace('\\', '_').replace('[', '_').replace(']', '_').replace('*', '_').replace('?', '_').replace(':', '_')[:31]
+            group_df.to_excel(writer, index=False, sheet_name=safe_sheet_name)
+        # Add No trade date sheet
+        no_trade_df.to_excel(writer, index=False, sheet_name='No trade date')
     output.seek(0)
     
     return send_file(output, download_name='strategy_results.xlsx', as_attachment=True)
