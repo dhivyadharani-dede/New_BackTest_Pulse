@@ -112,7 +112,6 @@ ORDERED_SQL = [
     'create_mv_portfolio_final_pnl.sql',
     'create_strategy_run_results.sql',
     'sp_run_strategy.sql',
-    'CALL sp_run_strategy();',
 
 
 ]
