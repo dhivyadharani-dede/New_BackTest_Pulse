@@ -29,7 +29,7 @@ entry_sl_hits AS (
    ===================================================== */
 live_prices AS (
     SELECT *
-    FROM mv_reentry_live_prices
+    FROM wrk_reentry_live_prices
 )
 
 /* =====================================================

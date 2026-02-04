@@ -32,7 +32,7 @@ entry_legs AS (
    ===================================================== */
 eod_prices AS (
     SELECT *
-    FROM mv_live_prices_entry_round1
+    FROM wrk_live_prices_entry_round1
     WHERE leg_type = 'ENTRY'
 )
 

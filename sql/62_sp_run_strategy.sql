@@ -109,7 +109,42 @@ BEGIN
         REFRESH MATERIALIZED VIEW mv_base_strike_selection;
         REFRESH MATERIALIZED VIEW mv_breakout_context_round1;
         REFRESH MATERIALIZED VIEW mv_entry_and_hedge_legs;
-        REFRESH MATERIALIZED VIEW mv_live_prices_entry_round1;
+        -- REFRESH MATERIALIZED VIEW mv_live_prices_entry_round1;
+        TRUNCATE TABLE wrk_live_prices_entry_round1;
+
+INSERT INTO wrk_live_prices_entry_round1
+WITH strategy AS (
+    SELECT eod_time FROM v_strategy_config LIMIT 1
+),
+legs AS (
+    SELECT *
+    FROM mv_entry_and_hedge_legs
+    WHERE entry_round = 1
+)
+SELECT
+    l.trade_date,
+    l.expiry_date,
+    l.breakout_time,
+    l.entry_time,
+    l.spot_price,
+    l.option_type,
+    l.strike,
+    l.entry_price,
+    l.entry_round,
+    l.leg_type,
+    l.transaction_type,
+    o.time  AS ltp_time,
+    o.high  AS option_high,
+    o.open  AS option_open,
+    o.close AS option_close
+FROM legs l
+JOIN strategy s ON TRUE
+JOIN v_nifty_options_filtered o
+  ON o.date = l.trade_date
+ AND o.expiry = l.expiry_date
+ AND o.option_type = l.option_type
+ AND o.strike = l.strike
+ AND o.time BETWEEN l.entry_time AND s.eod_time;
         REFRESH MATERIALIZED VIEW mv_entry_sl_hits_round1;
         REFRESH MATERIALIZED VIEW mv_entry_sl_executions_round1;
         REFRESH MATERIALIZED VIEW mv_entry_open_legs_round1;
@@ -134,7 +169,41 @@ BEGIN
         REFRESH MATERIALIZED VIEW mv_reentry_triggered_breakouts;
         REFRESH MATERIALIZED VIEW mv_reentry_base_strike_selection;
         REFRESH MATERIALIZED VIEW mv_reentry_legs_and_hedge_legs;
-        REFRESH MATERIALIZED VIEW mv_reentry_live_prices;
+        -- REFRESH MATERIALIZED VIEW mv_reentry_live_prices;
+        TRUNCATE TABLE wrk_reentry_live_prices;
+
+INSERT INTO wrk_reentry_live_prices
+WITH strategy AS (
+    SELECT eod_time FROM v_strategy_config
+),
+legs AS (
+    SELECT * FROM mv_reentry_legs_and_hedge_legs
+)
+SELECT
+    l.trade_date,
+    l.expiry_date,
+    l.breakout_time,
+    l.entry_time,
+    l.spot_price,
+    l.option_type,
+    l.strike,
+    l.entry_price,
+    l.entry_round,
+    l.leg_type,
+    l.transaction_type,
+    o.time  AS ltp_time,
+    o.high  AS option_high,
+    o.open  AS option_open,
+    o.close AS option_close
+FROM legs l
+JOIN strategy s ON TRUE
+JOIN v_nifty_options_filtered o
+  ON o.date = l.trade_date
+ AND o.expiry = l.expiry_date
+ AND o.option_type = l.option_type
+ AND o.strike = l.strike
+ AND o.time BETWEEN l.entry_time AND s.eod_time;
+
         REFRESH MATERIALIZED VIEW mv_reentry_breakout_context;
         REFRESH MATERIALIZED VIEW mv_reentry_sl_hits;
         REFRESH MATERIALIZED VIEW mv_reentry_sl_executions;
@@ -156,7 +225,51 @@ BEGIN
         REFRESH MATERIALIZED VIEW mv_rehedge_eod_exit_reentry;
         REFRESH MATERIALIZED VIEW mv_all_legs_reentry;
         CALL sp_run_reentry_loop(rec.strategy_name);
-        REFRESH MATERIALIZED VIEW mv_entry_leg_live_prices;
+        -- REFRESH MATERIALIZED VIEW mv_entry_leg_live_prices;
+        TRUNCATE TABLE wrk_entry_leg_live_prices;
+
+INSERT INTO wrk_entry_leg_live_prices
+WITH legs AS (
+    SELECT * FROM mv_all_legs_reentry
+    UNION ALL
+    SELECT * FROM mv_all_legs_round1
+)
+SELECT
+    l.trade_date,
+    l.expiry_date,
+    l.breakout_time,
+    l.entry_time,
+    l.spot_price,
+    l.option_type,
+    l.strike,
+    l.entry_price,
+    CASE
+        WHEN l.sl_level ~ '^[0-9.]+$' THEN l.sl_level::numeric
+        ELSE NULL
+    END AS sl_level,
+    l.entry_round,
+    l.leg_type,
+    l.transaction_type,
+    l.exit_time,
+    l.exit_reason,
+    o.time  AS ltp_time,
+    o.high  AS option_high,
+    o.open  AS option_open,
+    o.close AS option_close,
+    n.high  AS nifty_high,
+    n.low   AS nifty_low,
+    n.time  AS nifty_time
+FROM legs l
+JOIN v_nifty_options_filtered o
+  ON o.date = l.trade_date
+ AND o.expiry = l.expiry_date
+ AND o.option_type = l.option_type
+ AND o.strike = l.strike
+ AND o.time > l.entry_time
+JOIN v_nifty50_filtered n
+  ON n.date = l.trade_date
+ AND n.time = o.time;
+
         REFRESH MATERIALIZED VIEW mv_all_entries_sl_tracking_adjusted;
         REFRESH MATERIALIZED VIEW mv_portfolio_mtm_pnl;
         REFRESH MATERIALIZED VIEW mv_portfolio_final_pnl;

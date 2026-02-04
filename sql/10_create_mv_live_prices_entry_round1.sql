@@ -1,6 +1,23 @@
 -- Materialized view: live option prices for entry round 1
-DROP MATERIALIZED VIEW IF EXISTS public.mv_live_prices_entry_round1 CASCADE;
-CREATE MATERIALIZED VIEW IF NOT EXISTS public.mv_live_prices_entry_round1 AS
+TRUNCATE TABLE public.wrk_live_prices_entry_round1;
+
+INSERT INTO public.wrk_live_prices_entry_round1 (
+    trade_date,
+    expiry_date,
+    breakout_time,
+    entry_time,
+    spot_price,
+    option_type,
+    strike,
+    entry_price,
+    entry_round,
+    leg_type,
+    transaction_type,
+    ltp_time,
+    option_high,
+    option_open,
+    option_close
+)
 WITH strategy AS (
     SELECT eod_time FROM public.v_strategy_config LIMIT 1
 ),
@@ -34,4 +51,4 @@ JOIN public.v_nifty_options_filtered o
  AND o.strike = l.strike
  AND o.time BETWEEN l.entry_time AND s.eod_time;
 
-CREATE INDEX IF NOT EXISTS idx_mv_live_prices_entry_round1_date_time ON public.mv_live_prices_entry_round1 (trade_date, entry_time);
+

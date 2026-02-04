@@ -1,5 +1,22 @@
-DROP MATERIALIZED VIEW IF EXISTS public.mv_reentry_live_prices CASCADE;
-CREATE MATERIALIZED VIEW mv_reentry_live_prices AS
+TRUNCATE TABLE public.wrk_reentry_live_prices;
+
+INSERT INTO public.wrk_reentry_live_prices (
+    trade_date,
+    expiry_date,
+    breakout_time,
+    entry_time,
+    spot_price,
+    option_type,
+    strike,
+    entry_price,
+    entry_round,
+    leg_type,
+    transaction_type,
+    ltp_time,
+    option_high,
+    option_open,
+    option_close
+)
 WITH strategy AS (
     SELECT eod_time FROM v_strategy_config
 ),

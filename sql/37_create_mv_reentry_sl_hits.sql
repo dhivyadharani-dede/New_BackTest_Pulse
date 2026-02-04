@@ -17,7 +17,7 @@ WITH strategy AS (
    ===================================================== */
 entry_live_prices AS (
     SELECT *
-    FROM mv_reentry_live_prices
+    FROM wrk_reentry_live_prices
     WHERE leg_type = 'RE-ENTRY'
 	--AND ltp_time > entry_time
 ),

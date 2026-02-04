@@ -57,7 +57,7 @@ hedge_legs AS (
    ===================================================== */
 hedge_prices AS (
     SELECT *
-    FROM mv_live_prices_entry_round1
+    FROM wrk_live_prices_entry_round1
     WHERE leg_type = 'HEDGE'
 )
 

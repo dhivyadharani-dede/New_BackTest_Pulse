@@ -46,7 +46,7 @@ open_hedges AS (
    ===================================================== */
 hedge_eod_price AS (
     SELECT *
-    FROM mv_reentry_live_prices
+    FROM wrk_reentry_live_prices
     WHERE leg_type = 'HEDGE-RE-ENTRY'
 )
 

@@ -83,7 +83,7 @@ hedge_legs AS (
    ===================================================== */
 hedge_prices AS (
     SELECT *
-    FROM mv_reentry_live_prices
+    FROM wrk_reentry_live_prices
     WHERE leg_type = 'HEDGE-RE-ENTRY'
 ),
 
@@ -101,7 +101,7 @@ entry_legs AS (
    ===================================================== */
 entry_prices AS (
     SELECT *
-    FROM mv_reentry_live_prices
+    FROM wrk_reentry_live_prices
     WHERE leg_type = 'RE-ENTRY'
 )
 
