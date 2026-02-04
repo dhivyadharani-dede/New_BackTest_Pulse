@@ -1,6 +1,8 @@
+-- Materialized view: all entries sl tracking adjusted
+DROP MATERIALIZED VIEW IF EXISTS mv_all_entries_sl_tracking_adjusted CASCADE;
 CREATE MATERIALIZED VIEW mv_all_entries_sl_tracking_adjusted AS
 WITH config AS (
-    SELECT 
+    SELECT
         sl_type,
         sl_percentage,
         box_sl_trigger_pct,

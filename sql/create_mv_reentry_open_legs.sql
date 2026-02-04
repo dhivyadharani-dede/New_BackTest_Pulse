@@ -1,4 +1,5 @@
-DROP MATERIALIZED VIEW IF EXISTS public.mv_reentry_open_legs CASCADE;
+-- Materialized view: reentry open legs
+DROP MATERIALIZED VIEW IF EXISTS mv_reentry_open_legs CASCADE;
 CREATE MATERIALIZED VIEW mv_reentry_open_legs AS
 WITH
 

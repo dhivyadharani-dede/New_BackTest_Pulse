@@ -1,6 +1,6 @@
 -- Materialized view: rehedge EOD exits (reentry)
-DROP MATERIALIZED VIEW IF EXISTS public.mv_rehedge_eod_exit_reentry CASCADE;
-CREATE MATERIALIZED VIEW IF NOT EXISTS public.mv_rehedge_eod_exit_reentry AS
+DROP MATERIALIZED VIEW IF EXISTS mv_rehedge_eod_exit_reentry CASCADE;
+CREATE MATERIALIZED VIEW mv_rehedge_eod_exit_reentry AS
 WITH strategy AS (
     SELECT
         eod_time,
@@ -43,5 +43,3 @@ JOIN v_nifty_options_filtered o
  AND o.option_type = h.option_type
  AND o.strike = h.strike
  AND o.time::TIME = s.eod_time::TIME;
-
-CREATE INDEX IF NOT EXISTS idx_mv_rehedge_eod_exit_reentry_date ON public.mv_rehedge_eod_exit_reentry (trade_date, expiry_date, entry_round);

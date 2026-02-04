@@ -1,3 +1,5 @@
+-- Materialized view: portfolio mtm pnl
+DROP MATERIALIZED VIEW IF EXISTS mv_portfolio_mtm_pnl CASCADE;
 CREATE MATERIALIZED VIEW mv_portfolio_mtm_pnl AS
 WITH config AS (
     SELECT 

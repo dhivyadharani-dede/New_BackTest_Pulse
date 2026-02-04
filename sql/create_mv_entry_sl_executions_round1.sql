@@ -90,5 +90,3 @@ sl_executed AS (
 SELECT *
 FROM sl_executed
 ORDER BY trade_date, expiry_date, exit_time, strike;
-
-CREATE INDEX IF NOT EXISTS idx_mv_entry_sl_executions_round1_date ON public.mv_entry_sl_executions_round1 (trade_date, expiry_date);

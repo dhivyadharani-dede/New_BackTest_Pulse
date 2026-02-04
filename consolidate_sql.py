@@ -34,7 +34,7 @@ sql_files_order = [
 
     # 5. Create entry/exit logic views
     'create_mv_entry_and_hedge_legs.sql',
-    'create_mv_live_prices_entry_round1.sql',
+    'create_temp_live_prices_entry_round1.sql',
     'create_mv_entry_sl_hits_round1.sql',
     'create_mv_entry_sl_executions_round1.sql',
     'create_mv_entry_open_legs_round1.sql',
@@ -64,7 +64,7 @@ sql_files_order = [
     'create_mv_reentry_triggered_breakouts.sql',
     'create_mv_reentry_base_strike_selection.sql',
     'create_mv_reentry_legs_and_hedge_legs.sql',
-    'create_mv_reentry_live_prices.sql',
+    'create_temp_reentry_live_prices.sql',
     'create_mv_reentry_breakout_context.sql',
     'create_mv_reentry_sl_hits.sql',
     'create_mv_reentry_sl_executions.sql',
@@ -89,7 +89,7 @@ sql_files_order = [
     'create_mv_all_legs_reentry.sql',
 
     # 10. Create portfolio and final views
-    'create_mv_entry_leg_live_prices.sql',
+    'create_temp_entry_leg_live_prices.sql',
     'create_mv_all_entries_sl_tracking_adjusted.sql',
     'create_mv_portfolio_mtm_pnl.sql',
     'create_mv_portfolio_final_pnl.sql',
@@ -154,7 +154,7 @@ def consolidate_sql_files():
                 section = "8. CREATE REENTRY ROUND VIEWS"
             elif sql_file.startswith('create_mv_hedge_reentry_') or (sql_file.startswith('create_mv_rehedge_') and 'reentry' in sql_file):
                 section = "9. CREATE REENTRY HEDGE VIEWS"
-            elif sql_file in ['create_mv_entry_leg_live_prices.sql', 'create_mv_all_entries_sl_tracking_adjusted.sql', 'create_mv_portfolio_mtm_pnl.sql', 'create_mv_portfolio_final_pnl.sql']:
+            elif sql_file in ['create_temp_entry_leg_live_prices.sql', 'create_mv_all_entries_sl_tracking_adjusted.sql', 'create_mv_portfolio_mtm_pnl.sql', 'create_mv_portfolio_final_pnl.sql']:
                 section = "10. CREATE PORTFOLIO AND FINAL VIEWS"
             elif sql_file.startswith('sp_'):
                 section = "11. CREATE STORED PROCEDURES"

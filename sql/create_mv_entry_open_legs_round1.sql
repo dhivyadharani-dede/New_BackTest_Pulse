@@ -51,5 +51,3 @@ WHERE NOT EXISTS (
       AND s.strike      = e.strike
       AND s.entry_round = e.entry_round
 );
-
-CREATE INDEX IF NOT EXISTS idx_mv_entry_open_legs_round1_date ON public.mv_entry_open_legs_round1 (trade_date, expiry_date);

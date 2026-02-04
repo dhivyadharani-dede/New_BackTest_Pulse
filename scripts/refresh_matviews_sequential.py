@@ -42,6 +42,7 @@ ORDERED_SQL = [
     # live prices and legs
     'create_mv_entry_and_hedge_legs.sql',
     'create_mv_live_prices_entry_round1.sql',
+    # 'create_temp_live_prices_entry_round1.sql',
 
     # entry SL detection & executions
     'create_mv_entry_sl_hits_round1.sql',
@@ -73,12 +74,12 @@ ORDERED_SQL = [
     'create_mv_rehedge_eod_exit_round1.sql',
     #consolidation
     'create_mv_all_legs_round1.sql',
-    'sp_insert_sl_legs_into_book.sql',
     'create_mv_reentry_triggered_breakouts.sql',
     # reentry pipeline
     'create_mv_reentry_base_strike_selection.sql',
     'create_mv_reentry_legs_and_hedge_legs.sql',
     'create_mv_reentry_live_prices.sql',
+    # 'create_temp_reentry_live_prices.sql',
     'create_mv_reentry_breakout_context.sql',
     'create_mv_reentry_sl_hits.sql',
     'create_mv_reentry_sl_executions.sql',
@@ -91,7 +92,7 @@ ORDERED_SQL = [
     'create_mv_hedge_reentry_exit_on_partial_conditions.sql',
     'create_mv_hedge_reentry_closed_legs.sql',
     'create_mv_hedge_reentry_eod_exit.sql',
-    'create_mv_reentry_exit_on_partial_hedge.sql',
+    # 'create_mv_reentry_exit_on_partial_hedge.sql',
     'create_mv_double_buy_legs_reentry.sql',
     # rehedge pipeline
     'create_mv_rehedge_trigger_reentry.sql',
@@ -103,10 +104,13 @@ ORDERED_SQL = [
 
     'create_mv_all_legs_reentry.sql',
 
+    'sp_insert_sl_legs_into_book.sql',
+
         # stored procedure
     'sp_run_reentry_loop.sql',
     # additional views
     'create_mv_entry_leg_live_prices.sql',
+    # 'create_temp_entry_leg_live_prices.sql',
     'create_mv_all_entries_sl_tracking_adjusted.sql',
     'create_mv_portfolio_mtm_pnl.sql',
     'create_mv_portfolio_final_pnl.sql',
@@ -144,9 +148,14 @@ def refresh_matview(name: str):
     try:
         with get_conn() as conn:
             with conn.cursor() as cur:
-                cur.execute(f'REFRESH MATERIALIZED VIEW public."{name}"')
-                conn.commit()
-        print(f"Refreshed: public.{name}")
+                # Check if it's actually a materialized view
+                cur.execute("SELECT 1 FROM pg_matviews WHERE matviewname = %s", (name,))
+                if cur.fetchone():
+                    cur.execute(f'REFRESH MATERIALIZED VIEW public."{name}"')
+                    conn.commit()
+                    print(f"Refreshed: public.{name}")
+                else:
+                    print(f"Skipping refresh for regular view: public.{name}")
     except Exception as e:
         print(f"Failed to refresh public.{name}: {e}")
 
@@ -172,6 +181,11 @@ def main():
         path = SQL_DIR / fname
         if not path.exists():
             print(f"Skipping missing SQL file: {fname}")
+            continue
+
+        # Skip stored procedure files
+        if fname.startswith('sp_'):
+            print(f"Skipping stored procedure file: {fname}")
             continue
 
         try:

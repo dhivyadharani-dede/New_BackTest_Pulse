@@ -129,6 +129,10 @@ def process_uploaded_csv(df):
                 update_progress('inserting_strategies', f'Inserting {len(df)} strategies into database...', 30)
                 
                 for i, (_, row) in enumerate(df.iterrows()):
+                    # Parse dates
+                    from_date = pd.to_datetime(row['from_date']).date()
+                    to_date = pd.to_datetime(row['to_date']).date()
+                    
                     cur.execute("""
                         INSERT INTO strategy_settings (
                             strategy_name, big_candle_tf, small_candle_tf, preferred_breakout_type,
@@ -152,7 +156,7 @@ def process_uploaded_csv(df):
                         row['max_reentry_rounds'], row['sl_type'], row['box_sl_trigger_pct'], 
                         row['box_sl_hard_pct'], row['reentry_breakout_type'], 
                         row['one_m_candle_tf'], row['entry_candle'], row['switch_pct'], 
-                        row['width_sl_pct'], row['from_date'], row['to_date']
+                        row['width_sl_pct'], from_date, to_date
                     ))
                     
                     # Update progress for each strategy

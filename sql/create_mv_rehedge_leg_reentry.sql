@@ -1,4 +1,5 @@
-DROP MATERIALIZED VIEW IF EXISTS public.mv_rehedge_leg_reentry CASCADE;
+-- Materialized view: rehedge leg reentry
+DROP MATERIALIZED VIEW IF EXISTS mv_rehedge_leg_reentry CASCADE;
 CREATE MATERIALIZED VIEW mv_rehedge_leg_reentry AS
 SELECT
     trade_date,

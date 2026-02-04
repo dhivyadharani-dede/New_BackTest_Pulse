@@ -1,5 +1,6 @@
-DROP MATERIALIZED VIEW IF EXISTS public.mv_reentry_exit_on_partial_hedge CASCADE;
-CREATE MATERIALIZED VIEW mv_reentry_exit_on_partial_hedge AS
+-- Temp table: reentry exit on partial hedge
+DROP TABLE IF EXISTS temp_reentry_exit_on_partial_hedge CASCADE;
+CREATE TEMP TABLE temp_reentry_exit_on_partial_hedge AS
 WITH strategy AS (
     SELECT
         no_of_lots,

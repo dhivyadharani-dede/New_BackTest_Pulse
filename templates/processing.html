@@ -124,7 +124,7 @@
                     } else if (data.step === 'error') {
                         spinner.style.display = 'none';
                         progressFill.style.background = 'linear-gradient(90deg, #f44336, #e53935)';
-                        statusMessage.textContent = '❌ Error occurred during processing';
+                        statusMessage.textContent = '❌ Error: ' + data.message;
                         stepInfo.textContent = 'Please check the error details and try again';
                     }
                 })

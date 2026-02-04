@@ -56,11 +56,17 @@ BEGIN
         -- Strike selection & leg creation
         REFRESH MATERIALIZED VIEW mv_reentry_base_strike_selection;
         REFRESH MATERIALIZED VIEW mv_reentry_breakout_context;
-        REFRESH MATERIALIZED VIEW mv_reentry_legs_and_hedge_legs;
+        -- REFRESH MATERIALIZED VIEW mv_reentry_legs_and_hedge_legs;
 
+        -- Create temp table for reentry legs and hedge legs
+        DROP TABLE IF EXISTS temp_reentry_legs_and_hedge_legs CASCADE;
+        CREATE TEMP TABLE temp_reentry_legs_and_hedge_legs AS
+SELECT * FROM mv_reentry_legs_and_hedge_legs;
         -- Price streams & context
-        REFRESH MATERIALIZED VIEW mv_reentry_live_prices;
-       
+        -- Create temp table for reentry live prices
+        DROP TABLE IF EXISTS temp_reentry_live_prices CASCADE;
+        CREATE TEMP TABLE temp_reentry_live_prices AS
+SELECT * FROM mv_reentry_live_prices;
 
         -- SL detection
         REFRESH MATERIALIZED VIEW mv_reentry_sl_hits;
@@ -68,7 +74,7 @@ BEGIN
         REFRESH MATERIALIZED VIEW mv_reentry_open_legs;
         REFRESH MATERIALIZED VIEW mv_reentry_profit_booking;
         REFRESH MATERIALIZED VIEW mv_reentry_eod_close;
-        REFRESH MATERIALIZED VIEW mv_reentry_final_exit;
+        -- REFRESH MATERIALIZED VIEW mv_reentry_final_exit;
         REFRESH MATERIALIZED VIEW mv_reentry_legs_stats;
 
         REFRESH MATERIALIZED VIEW mv_hedge_reentry_exit_on_all_entry_sl;
@@ -77,18 +83,146 @@ BEGIN
 
         -- Re-hedge chain
         REFRESH MATERIALIZED VIEW mv_rehedge_trigger_reentry;
-        REFRESH MATERIALIZED VIEW mv_rehedge_candidate_reentry;
-        REFRESH MATERIALIZED VIEW mv_rehedge_selected_reentry;
-        REFRESH MATERIALIZED VIEW mv_rehedge_leg_reentry;
-        REFRESH MATERIALIZED VIEW mv_rehedge_eod_exit_reentry;
+        -- REFRESH MATERIALIZED VIEW mv_rehedge_candidate_reentry;
+        -- REFRESH MATERIALIZED VIEW mv_rehedge_selected_reentry;
+        -- REFRESH MATERIALIZED VIEW mv_rehedge_leg_reentry;
+        -- REFRESH MATERIALIZED VIEW mv_rehedge_eod_exit_reentry;
 
         -- Profit / EOD / double-buy
         REFRESH MATERIALIZED VIEW mv_reentry_profit_booking;
         REFRESH MATERIALIZED VIEW mv_reentry_eod_close;
-        REFRESH MATERIALIZED VIEW mv_double_buy_legs_reentry;
+        -- REFRESH MATERIALIZED VIEW mv_double_buy_legs_reentry;
 
         -- FINAL CONSOLIDATION
-        REFRESH MATERIALIZED VIEW mv_all_legs_reentry;
+        -- REFRESH MATERIALIZED VIEW mv_all_legs_reentry;
+
+        -- Create temp tables from refreshed materialized views
+        DROP TABLE IF EXISTS temp_reentry_final_exit CASCADE;
+        CREATE TEMP TABLE temp_reentry_final_exit AS SELECT * FROM mv_reentry_final_exit;
+
+        DROP TABLE IF EXISTS temp_double_buy_legs_reentry CASCADE;
+        CREATE TEMP TABLE temp_double_buy_legs_reentry AS SELECT * FROM mv_double_buy_legs_reentry;
+
+        DROP TABLE IF EXISTS temp_hedge_reentry_closed_legs CASCADE;
+        CREATE TEMP TABLE temp_hedge_reentry_closed_legs AS SELECT * FROM mv_hedge_reentry_closed_legs;
+
+        DROP TABLE IF EXISTS temp_hedge_reentry_eod_exit CASCADE;
+        CREATE TEMP TABLE temp_hedge_reentry_eod_exit AS SELECT * FROM mv_hedge_reentry_eod_exit;
+
+        DROP TABLE IF EXISTS temp_rehedge_eod_exit_reentry CASCADE;
+        CREATE TEMP TABLE temp_rehedge_eod_exit_reentry AS SELECT * FROM mv_rehedge_eod_exit_reentry;
+
+        -- Create temp table for all legs reentry
+        DROP TABLE IF EXISTS temp_all_legs_reentry CASCADE;
+        CREATE TEMP TABLE temp_all_legs_reentry AS
+        SELECT
+            trade_date,
+            expiry_date,
+            breakout_time,
+            entry_time,
+            spot_price,
+            option_type,
+            strike,
+            entry_price,
+            '0' as sl_level,
+            entry_round,
+            leg_type,
+            transaction_type,
+            exit_time,
+            exit_price,
+            exit_reason,
+            pnl_amount
+        FROM temp_reentry_final_exit
+        UNION ALL
+        SELECT
+            trade_date,
+            expiry_date,
+            breakout_time,
+            entry_time,
+            spot_price,
+            option_type,
+            strike,
+            entry_price,
+            '0' AS sl_level,
+            entry_round,
+            leg_type,
+            transaction_type,
+            exit_time,
+            exit_price,
+            exit_reason,
+            pnl_amount
+        FROM temp_double_buy_legs_reentry
+        UNION ALL
+        SELECT
+            trade_date,
+            expiry_date,
+            breakout_time,
+            entry_time,
+            spot_price,
+            option_type,
+            strike,
+            entry_price,
+            '0' AS sl_level,
+            entry_round,
+            leg_type,
+            transaction_type,
+            exit_time,
+            exit_price,
+            exit_reason,
+            pnl_amount
+        FROM temp_hedge_reentry_closed_legs
+
+        UNION ALL
+        SELECT
+            trade_date,
+            expiry_date,
+            breakout_time,
+            entry_time,
+            spot_price,
+            option_type,
+            strike,
+            entry_price,
+           '0' AS sl_level,
+            entry_round,
+            leg_type,
+            transaction_type,
+            exit_time,
+            exit_price,
+            exit_reason,
+            pnl_amount
+        FROM temp_hedge_reentry_eod_exit
+
+        /* =====================================================
+           RE-HEDGE – EOD EXIT
+           ===================================================== */
+        UNION ALL
+        SELECT
+            trade_date,
+            expiry_date,
+            breakout_time,
+            entry_time,
+            spot_price,
+            option_type,
+            strike,
+            entry_price,
+            '0' AS sl_level,
+            entry_round,
+            leg_type,
+            transaction_type,
+            exit_time,
+            exit_price,
+            exit_reason,
+            pnl_amount
+        FROM temp_rehedge_eod_exit_reentry
+
+        ORDER BY
+            trade_date,
+            expiry_date,
+            entry_round,
+            entry_time,
+            exit_time,
+            strike,
+            leg_type;
 
         -- Refresh triggered breakouts after consolidation
       --  REFRESH MATERIALIZED VIEW mv_reentry_triggered_breakouts;
@@ -129,7 +263,7 @@ BEGIN
             r.leg_type,
             r.entry_round,
             r.exit_reason
-        FROM mv_all_legs_reentry r
+        FROM temp_all_legs_reentry r
         WHERE r.entry_round = v_current_round + 1
           AND NOT EXISTS (
               SELECT 1
@@ -163,6 +297,10 @@ BEGIN
             'Inserted % re-entry legs for round %',
             v_inserted_rows,
             v_current_round + 1;
+
+        -- Refresh consolidated view and insert legs
+        REFRESH MATERIALIZED VIEW mv_all_legs_reentry;
+        CALL insert_sl_legs_into_book(p_strategy_name);
 
     END LOOP;
 

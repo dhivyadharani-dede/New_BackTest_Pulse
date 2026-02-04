@@ -1,4 +1,5 @@
-DROP MATERIALIZED VIEW IF EXISTS public.mv_hedge_reentry_exit_on_partial_conditions CASCADE;
+-- Temp table: hedge reentry exit on partial conditions
+DROP MATERIALIZED VIEW IF EXISTS mv_hedge_reentry_exit_on_partial_conditions CASCADE;
 CREATE MATERIALIZED VIEW mv_hedge_reentry_exit_on_partial_conditions AS
 WITH strategy AS (
     SELECT

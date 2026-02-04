@@ -1,12 +1,12 @@
--- Materialized view: entry leg live prices
-DROP MATERIALIZED VIEW IF EXISTS mv_entry_leg_live_prices CASCADE;
-CREATE MATERIALIZED VIEW mv_entry_leg_live_prices AS
+-- Temp table: entry leg live prices
+DROP TABLE IF EXISTS temp_entry_leg_live_prices CASCADE;
+CREATE TEMP TABLE temp_entry_leg_live_prices AS
 WITH legs AS (
-    SELECT * FROM mv_all_legs_reentry
+    SELECT * FROM temp_all_legs_reentry
     UNION ALL
     SELECT * FROM mv_all_legs_round1
 )
-SELECT 
+SELECT
     l.*,
     o.time      AS ltp_time,
     o.high      AS option_high,

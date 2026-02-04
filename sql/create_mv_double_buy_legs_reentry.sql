@@ -1,4 +1,5 @@
-DROP MATERIALIZED VIEW IF EXISTS public.mv_double_buy_legs_reentry CASCADE;
+-- Materialized view: double buy legs reentry
+DROP MATERIALIZED VIEW IF EXISTS mv_double_buy_legs_reentry CASCADE;
 CREATE MATERIALIZED VIEW mv_double_buy_legs_reentry AS
 WITH strategy AS (
     SELECT

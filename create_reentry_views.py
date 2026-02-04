@@ -13,7 +13,7 @@ files = [
     'sql/create_mv_reentry_triggered_breakouts.sql',
     'sql/create_mv_reentry_base_strike_selection.sql',
     'sql/create_mv_reentry_legs_and_hedge_legs.sql',
-    'sql/create_mv_reentry_live_prices.sql',
+    'sql/create_temp_reentry_live_prices.sql',
     'sql/create_mv_reentry_sl_hits.sql',
     'sql/create_mv_reentry_sl_executions.sql',
     'sql/create_mv_reentry_open_legs.sql',

@@ -1,4 +1,5 @@
-DROP MATERIALIZED VIEW IF EXISTS public.mv_reentry_sl_executions CASCADE;
+-- Materialized view: reentry SL executions
+DROP MATERIALIZED VIEW IF EXISTS mv_reentry_sl_executions CASCADE;
 CREATE MATERIALIZED VIEW mv_reentry_sl_executions AS
 WITH strategy AS (
     SELECT

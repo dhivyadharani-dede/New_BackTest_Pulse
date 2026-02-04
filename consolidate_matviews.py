@@ -25,7 +25,7 @@ sql_files_order = [
 
     # live prices and legs
     'create_mv_entry_and_hedge_legs.sql',
-    'create_mv_live_prices_entry_round1.sql',
+    'create_temp_live_prices_entry_round1.sql',
 
     # entry SL detection & executions
     'create_mv_entry_sl_hits_round1.sql',
@@ -62,7 +62,7 @@ sql_files_order = [
     # reentry pipeline
     'create_mv_reentry_base_strike_selection.sql',
     'create_mv_reentry_legs_and_hedge_legs.sql',
-    'create_mv_reentry_live_prices.sql',
+    'create_temp_reentry_live_prices.sql',
     'create_mv_reentry_breakout_context.sql',
     'create_mv_reentry_sl_hits.sql',
     'create_mv_reentry_sl_executions.sql',
@@ -89,7 +89,7 @@ sql_files_order = [
         # stored procedure
     'sp_run_reentry_loop.sql',
     # additional views
-    'create_mv_entry_leg_live_prices.sql',
+    'create_temp_entry_leg_live_prices.sql',
     'create_mv_all_entries_sl_tracking_adjusted.sql',
     'create_mv_portfolio_mtm_pnl.sql',
     'create_mv_portfolio_final_pnl.sql',

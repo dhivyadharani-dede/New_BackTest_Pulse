@@ -1,6 +1,8 @@
+-- Materialized view: portfolio final pnl
+DROP MATERIALIZED VIEW IF EXISTS mv_portfolio_final_pnl CASCADE;
 CREATE MATERIALIZED VIEW mv_portfolio_final_pnl AS
 WITH config AS (
-    SELECT 
+    SELECT
         portfolio_capital,
         portfolio_profit_target_pct  AS portfolio_profit_target_pct,
         portfolio_stop_loss_pct AS  portfolio_stop_loss_pct,

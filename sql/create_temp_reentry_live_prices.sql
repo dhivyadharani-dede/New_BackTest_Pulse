@@ -1,6 +1,6 @@
--- Materialized view: live option prices for reentry
-DROP MATERIALIZED VIEW IF EXISTS mv_reentry_live_prices CASCADE;
-CREATE MATERIALIZED VIEW mv_reentry_live_prices AS
+-- Temp table: live option prices for reentry
+DROP TABLE IF EXISTS temp_reentry_live_prices CASCADE;
+CREATE TEMP TABLE temp_reentry_live_prices AS
 WITH strategy AS (
     SELECT eod_time FROM v_strategy_config
 ),
@@ -9,7 +9,7 @@ legs AS (
     FROM mv_reentry_legs_and_hedge_legs
    -- WHERE entry_round = 1
 )
-SELECT 
+SELECT
     l.trade_date,
     l.expiry_date,
     l.breakout_time,

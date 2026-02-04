@@ -1,4 +1,5 @@
-DROP MATERIALIZED VIEW IF EXISTS public.mv_reentry_legs_and_hedge_legs CASCADE;
+-- Materialized view: reentry legs and hedge legs
+DROP MATERIALIZED VIEW IF EXISTS mv_reentry_legs_and_hedge_legs CASCADE;
 CREATE MATERIALIZED VIEW mv_reentry_legs_and_hedge_legs AS
 WITH strategy AS (
     SELECT
