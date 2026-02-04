@@ -169,17 +169,8 @@ def process_uploaded_csv(df):
                 cur.execute("DELETE FROM strategy_run_results")
                 conn.commit()
         
-        # Refresh materialized views sequentially before running strategy
-        update_progress('refreshing_views', 'Refreshing materialized views...', 75)
-        import subprocess
-        try:
-            subprocess.check_call([sys.executable, str(repo_root / 'scripts' / 'refresh_matviews_sequential.py')])
-            update_progress('views_refreshed', 'Materialized views refreshed successfully', 80)
-        except subprocess.CalledProcessError as e:
-            update_progress('error', f'Error refreshing views: {str(e)}', 0)
-            return {'status': 'error', 'message': f'Error refreshing views: {str(e)}'}
-        
-        # Run the strategy
+        # Run the strategy (assumes views are already refreshed)
+        update_progress('running_strategy', 'Executing trading strategy...', 75)
         with get_conn() as conn:
             with conn.cursor() as cur:
                 cur.execute("CALL sp_run_strategy()")
