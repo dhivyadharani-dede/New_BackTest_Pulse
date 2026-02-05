@@ -1,4 +1,10 @@
 -- Materialized views that cache per-strategy filtered rows using runtime_strategy_config
+DROP MATERIALIZED VIEW IF EXISTS public.v_ha_big_filtered CASCADE;
+DROP MATERIALIZED VIEW IF EXISTS public.v_ha_small_filtered CASCADE;
+DROP MATERIALIZED VIEW IF EXISTS public.v_ha_1m_filtered CASCADE;
+
+DROP MATERIALIZED VIEW IF EXISTS public.v_nifty50_filtered CASCADE;
+DROP MATERIALIZED VIEW IF EXISTS public.v_nifty_options_filtered CASCADE;
 
 CREATE MATERIALIZED VIEW IF NOT EXISTS public.v_ha_big_filtered AS
 SELECT

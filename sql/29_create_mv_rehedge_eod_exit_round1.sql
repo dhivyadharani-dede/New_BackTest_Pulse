@@ -9,7 +9,7 @@ WITH strategy AS (
     FROM v_strategy_config
 )
 
-SELECT
+SELECT DISTINCT
     h.trade_date,
     h.expiry_date,
     h.breakout_time,
