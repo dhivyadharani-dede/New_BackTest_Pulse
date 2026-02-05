@@ -115,8 +115,10 @@ ORDERED_SQL = [
     '59_create_mv_portfolio_mtm_pnl.sql',
     '60_create_mv_portfolio_final_pnl.sql',
     '61_create_strategy_run_results.sql',
-    '62_sp_run_strategy.sql',
-    '67_call_sp_run_strategy.sql',
+    # '62_sp_run_strategy.sql',
+    # '67_call_sp_run_strategy.sql',
+    '68_create_sp_run_strategy_batched.sql',
+    '69_call_sp_run_strategy_batched.sql'
 
 
 ]
