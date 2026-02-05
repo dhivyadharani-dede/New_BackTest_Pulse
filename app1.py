@@ -184,7 +184,7 @@ def process_uploaded_csv(df):
         print("⚡ Executing main trading strategy (round 1)...")
         with get_conn() as conn:
             with conn.cursor() as cur:
-                cur.execute("CALL sp_run_strategy()")
+                cur.execute("CALL sp_run_strategy_batched()")
                 conn.commit()
         
         update_progress('processing_results', 'Processing backtest results...', 90)
@@ -398,25 +398,154 @@ def download_analysis():
         overall_df = pd.read_sql(overall_query, conn)
         
         results_df = pd.read_sql("SELECT * FROM strategy_run_results ORDER BY strategy_name, trade_date", conn)
+        
+        # Strategy settings with daily PnL
+        strategy_daily_query = """
+        SELECT
+            s.strategy_name,
+            s.big_candle_tf,
+            s.small_candle_tf,
+            s.preferred_breakout_type,
+            s.breakout_threshold_pct,
+            s.option_entry_price_cap,
+            s.hedge_entry_price_cap,
+            s.num_entry_legs,
+            s.num_hedge_legs,
+            s.sl_percentage,
+            s.eod_time,
+            s.no_of_lots,
+            s.lot_size,
+            s.hedge_exit_entry_ratio,
+            s.hedge_exit_multiplier,
+            s.leg_profit_pct,
+            s.portfolio_profit_target_pct,
+            s.portfolio_stop_loss_pct,
+            s.portfolio_capital,
+            s.max_reentry_rounds,
+            s.sl_type,
+            s.box_sl_trigger_pct,
+            s.box_sl_hard_pct,
+            s.reentry_breakout_type,
+            s.one_m_candle_tf,
+            s.entry_candle,
+            s.switch_pct,
+            s.width_sl_pct,
+            d.trade_date,
+            d.total_pnl
+        FROM strategy_settings s
+        JOIN (
+            SELECT
+                strategy_name,
+                trade_date,
+                SUM(pnl_amount) as total_pnl
+            FROM strategy_run_results
+            GROUP BY strategy_name, trade_date
+        ) d ON s.strategy_name = d.strategy_name
+        ORDER BY s.strategy_name, d.trade_date
+        """
+        strategy_daily_df = pd.read_sql(strategy_daily_query, conn)
     
     output = io.BytesIO()
     with pd.ExcelWriter(output, engine='openpyxl') as writer:
         results_df.to_excel(writer, index=False, sheet_name='Full Results')
         daily_df.to_excel(writer, index=False, sheet_name='Daily Analysis')
-        overall_df.to_excel(writer, index=False, sheet_name='Strategy Summary')
         
         # Rankings sheet based on total PnL
         top_5 = overall_df.head(5).copy()
         top_5['Rank'] = range(1, len(top_5) + 1)
         top_5['Type'] = 'Top'
-        bottom_5 = overall_df.tail(5).copy()
-        bottom_5['Rank'] = range(len(overall_df) - 4, len(overall_df) + 1)
+        
+        # Handle case where there are fewer than 5 strategies
+        num_strategies = len(overall_df)
+        if num_strategies >= 5:
+            bottom_5 = overall_df.tail(5).copy()
+            bottom_5['Rank'] = range(num_strategies - 4, num_strategies + 1)
+        else:
+            # If fewer than 5 strategies, bottom_5 is same as overall_df
+            bottom_5 = overall_df.copy()
+            bottom_5['Rank'] = range(1, num_strategies + 1)
+        
         bottom_5['Type'] = 'Bottom'
         rankings = pd.concat([top_5, bottom_5])
         rankings[['Rank', 'strategy_name', 'total_pnl', 'Type']].to_excel(writer, index=False, sheet_name='Rankings')
     
     output.seek(0)
     return send_file(output, download_name='strategy_analysis.xlsx', as_attachment=True)
+
+@app.route('/download_strategy_settings')
+def download_strategy_settings():
+    try:
+        with get_conn() as conn:
+            # Strategy settings with daily PnL
+            strategy_daily_query = """
+            SELECT
+                s.strategy_name,
+                s.big_candle_tf,
+                s.small_candle_tf,
+                s.preferred_breakout_type,
+                s.breakout_threshold_pct,
+                s.option_entry_price_cap,
+                s.hedge_entry_price_cap,
+                s.num_entry_legs,
+                s.num_hedge_legs,
+                s.sl_percentage,
+                s.eod_time,
+                s.no_of_lots,
+                s.lot_size,
+                s.hedge_exit_entry_ratio,
+                s.hedge_exit_multiplier,
+                s.leg_profit_pct,
+                s.portfolio_profit_target_pct,
+                s.portfolio_stop_loss_pct,
+                s.portfolio_capital,
+                s.max_reentry_rounds,
+                s.sl_type,
+                s.box_sl_trigger_pct,
+                s.box_sl_hard_pct,
+                s.reentry_breakout_type,
+                s.one_m_candle_tf,
+                s.entry_candle,
+                s.switch_pct,
+                s.width_sl_pct,
+                d.trade_date,
+                d.total_pnl
+            FROM strategy_settings s
+            JOIN (
+                SELECT
+                    strategy_name,
+                    trade_date,
+                    SUM(pnl_amount) as total_pnl
+                FROM strategy_run_results
+                GROUP BY strategy_name, trade_date
+            ) d ON s.strategy_name = d.strategy_name
+            ORDER BY s.strategy_name, d.trade_date
+            """
+            strategy_daily_df = pd.read_sql(strategy_daily_query, conn)
+        
+        if strategy_daily_df.empty:
+            # Return empty Excel if no data
+            output = io.BytesIO()
+            with pd.ExcelWriter(output, engine='openpyxl') as writer:
+                pd.DataFrame().to_excel(writer, index=False, sheet_name='Strategy Settings + Daily PnL')
+        else:
+            output = io.BytesIO()
+            with pd.ExcelWriter(output, engine='openpyxl') as writer:
+                strategy_daily_df.to_excel(writer, index=False, sheet_name='Strategy Settings + Daily PnL')
+        
+        output.seek(0)
+        return send_file(output, download_name='strategy_settings_daily_pnl.xlsx', as_attachment=True)
+    except Exception as e:
+        # Return error Excel if something goes wrong
+        output = io.BytesIO()
+        with pd.ExcelWriter(output, engine='openpyxl') as writer:
+            error_df = pd.DataFrame({'Error': [str(e)]})
+            error_df.to_excel(writer, index=False, sheet_name='Error')
+        output.seek(0)
+        return send_file(output, download_name='strategy_settings_error.xlsx', as_attachment=True)
+
+@app.route('/test_route')
+def test_route():
+    return "Test route works!"
 
 @app.route('/download_results')
 def download_results():

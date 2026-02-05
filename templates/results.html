@@ -17,6 +17,10 @@
 <body>
     <h1>Backtest Results</h1>
     
+    {% if duration %}
+    <p><strong>Processing Time:</strong> {{ "%.2f"|format(duration) }} seconds</p>
+    {% endif %}
+    
     <h2>Daily Strategy Performance</h2>
     <table>
         <tr>
@@ -50,6 +54,7 @@
     <h2>Download Options</h2>
     <a href="{{ url_for('download_results') }}"><button>Download Full Results (CSV)</button></a>
     <a href="{{ url_for('download_analysis') }}"><button>Download Daily Analysis Report (Excel)</button></a>
+    <a href="{{ url_for('download_strategy_settings') }}"><button>Download Strategy Settings + Daily PnL (Excel)</button></a>
     
     <br><br>
     <a href="{{ url_for('index') }}"><button>Run Another Backtest</button></a>
