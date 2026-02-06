@@ -110,9 +110,9 @@ BEGIN
         REFRESH MATERIALIZED VIEW v_nifty_options_filtered;
 
         -- Refresh all relevant materialized views
-        REFRESH MATERIALIZED VIEW mv_ha_big_candle;
-        REFRESH MATERIALIZED VIEW mv_ha_small_candle;
-        REFRESH MATERIALIZED VIEW mv_ha_1m_candle;
+       -- REFRESH MATERIALIZED VIEW mv_ha_big_candle;
+       -- REFRESH MATERIALIZED VIEW mv_ha_small_candle;
+       -- REFRESH MATERIALIZED VIEW mv_ha_1m_candle;
         -- NOTE: v_*_filtered views are regular views, not materialized - they auto-update
         REFRESH MATERIALIZED VIEW mv_nifty_options_filtered;
         REFRESH MATERIALIZED VIEW mv_all_5min_breakouts;

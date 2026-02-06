@@ -41,7 +41,7 @@ entry_prices AS (
 /* =====================================================
    4. FORCE ENTRY EXIT
    ===================================================== */
-SELECT DISTINCT
+SELECT 
     e.trade_date,
     e.expiry_date,
     e.breakout_time,

@@ -4,7 +4,7 @@ CREATE MATERIALIZED VIEW mv_all_legs_reentry AS
 /* =====================================================
    ENTRY – FINAL EXIT (risk + soft exits)
    ===================================================== */
-SELECT DISTINCT
+SELECT 
     trade_date,
     expiry_date,
     breakout_time,
@@ -23,7 +23,7 @@ SELECT DISTINCT
     pnl_amount
 FROM mv_reentry_final_exit
 UNION ALL
-SELECT DISTINCT
+SELECT 
     trade_date,
     expiry_date,
     breakout_time,
@@ -42,7 +42,7 @@ SELECT DISTINCT
     pnl_amount
 FROM mv_double_buy_legs_reentry
 UNION ALL
-SELECT DISTINCT
+SELECT 
     trade_date,
     expiry_date,
     breakout_time,
@@ -62,7 +62,7 @@ SELECT DISTINCT
 FROM mv_hedge_reentry_closed_legs
 
 UNION ALL
-SELECT DISTINCT
+SELECT 
     trade_date,
     expiry_date,
     breakout_time,
@@ -85,7 +85,7 @@ FROM mv_hedge_reentry_eod_exit
    RE-HEDGE – EOD EXIT
    ===================================================== */
 UNION ALL
-SELECT DISTINCT
+SELECT 
     trade_date,
     expiry_date,
     breakout_time,

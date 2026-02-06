@@ -75,7 +75,7 @@ ranked_entry_exits AS (
 /* =====================================================
    3. FINAL ENTRY EXIT
    ===================================================== */
-SELECT
+SELECT 
     trade_date,
     expiry_date,
     breakout_time,

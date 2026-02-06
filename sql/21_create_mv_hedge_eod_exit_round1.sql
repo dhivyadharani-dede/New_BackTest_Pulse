@@ -54,7 +54,7 @@ hedge_eod_price AS (
 /* =====================================================
    5. FINAL HEDGE EOD EXIT
    ===================================================== */
-SELECT distinct
+SELECT 
     h.trade_date,
     h.expiry_date,
     h.breakout_time,

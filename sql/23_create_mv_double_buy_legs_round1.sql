@@ -39,7 +39,7 @@ eod_prices AS (
 /* =====================================================
    4. DOUBLE BUY LEG
    ===================================================== */
-SELECT distinct
+SELECT 
     e.trade_date,
     e.expiry_date,
     e.breakout_time,
