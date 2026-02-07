@@ -1,4 +1,5 @@
-CREATE OR REPLACE PROCEDURE sp_run_reentry_loop(p_strategy_name TEXT)
+CREATE OR REPLACE FUNCTION fn_run_reentry_loop(p_strategy_name TEXT)
+RETURNS VOID
 LANGUAGE plpgsql
 AS $$
 DECLARE
@@ -149,5 +150,5 @@ DECLARE
     strat_name TEXT;
 BEGIN
     SELECT strategy_name INTO strat_name FROM v_strategy_config LIMIT 1;
-    CALL sp_run_reentry_loop(strat_name);
+    PERFORM fn_run_reentry_loop(strat_name);
 END $$;

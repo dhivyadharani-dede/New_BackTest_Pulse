@@ -106,7 +106,8 @@ ORDERED_SQL = [
     '55_create_mv_all_legs_reentry.sql',
 
         # stored procedure
-    '56_sp_run_reentry_loop.sql',
+    # '56_sp_run_reentry_loop.sql',
+    '56_fn_run_reentry_loop.sql',
     '66_run_reentry_loop.sql',
     # additional views
     '65_create_wrk_entry_leg_live_prices.sql',

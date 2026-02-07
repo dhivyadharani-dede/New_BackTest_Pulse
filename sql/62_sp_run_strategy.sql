@@ -224,7 +224,8 @@ JOIN v_nifty_options_filtered o
         REFRESH MATERIALIZED VIEW mv_rehedge_leg_reentry;
         REFRESH MATERIALIZED VIEW mv_rehedge_eod_exit_reentry;
         REFRESH MATERIALIZED VIEW mv_all_legs_reentry;
-        CALL sp_run_reentry_loop(rec.strategy_name);
+        -- CALL sp_run_reentry_loop(rec.strategy_name);
+        PERFORM fn_run_reentry_loop(rec.strategy_name);
         -- REFRESH MATERIALIZED VIEW mv_entry_leg_live_prices;
         TRUNCATE TABLE wrk_entry_leg_live_prices;
 
