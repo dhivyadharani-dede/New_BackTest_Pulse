@@ -1,6 +1,7 @@
 from flask import Flask, request, render_template_string, flash, redirect, url_for
 import pandas as pd
 import os
+from datetime import datetime
 from werkzeug.utils import secure_filename
 from src.db import get_conn
 
@@ -16,6 +17,22 @@ if not os.path.exists(UPLOAD_FOLDER):
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+def parse_date(date_str):
+    """Parse date string in various formats to YYYY-MM-DD"""
+    if not date_str or pd.isna(date_str):
+        return None
+    try:
+        # Try MM/DD/YYYY format first
+        return datetime.strptime(str(date_str), '%m/%d/%Y').strftime('%Y-%m-%d')
+    except ValueError:
+        try:
+            # Try YYYY-MM-DD format
+            datetime.strptime(str(date_str), '%Y-%m-%d')
+            return str(date_str)
+        except ValueError:
+            # Return default if parsing fails
+            return '2025-01-01'
 
 HTML_TEMPLATE = """
 <!DOCTYPE html>
@@ -154,8 +171,8 @@ def confirm_insert():
             flash('No CSV file found. Please upload first.', 'error')
             return redirect(url_for('index'))
 
-        # Use the most recent file
-        latest_file = max(upload_files, key=lambda x: os.path.getctime(os.path.join(UPLOAD_FOLDER, x)))
+        # Use the most recent file (by modification time)
+        latest_file = max(upload_files, key=lambda x: os.path.getmtime(os.path.join(UPLOAD_FOLDER, x)))
         filepath = os.path.join(UPLOAD_FOLDER, latest_file)
 
         df = pd.read_csv(filepath)
@@ -198,8 +215,8 @@ def confirm_insert():
                         'entry_candle': row.get('entry_candle', 1),
                         'switch_pct': row.get('switch_pct', 20.00),
                         'width_sl_pct': row.get('width_sl_pct', 40.00),
-                        'from_date': row.get('from_date', '2025-01-01'),
-                        'to_date': row.get('to_date', '2025-01-31')
+                        'from_date': parse_date(row.get('from_date')) or '2025-01-01',
+                        'to_date': parse_date(row.get('to_date')) or '2025-12-31'
                     }
 
                     cur.execute("""
