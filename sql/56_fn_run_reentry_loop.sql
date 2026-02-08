@@ -145,10 +145,10 @@ END;
 $$;
 
 
-DO $$
-DECLARE
-    strat_name TEXT;
-BEGIN
-    SELECT strategy_name INTO strat_name FROM v_strategy_config LIMIT 1;
-    PERFORM fn_run_reentry_loop(strat_name);
-END $$;
+-- DO $$
+-- DECLARE
+--     strat_name TEXT;
+-- BEGIN
+--     SELECT strategy_name INTO strat_name FROM v_strategy_config LIMIT 1;
+--     PERFORM fn_run_reentry_loop(strat_name);
+-- END $$;

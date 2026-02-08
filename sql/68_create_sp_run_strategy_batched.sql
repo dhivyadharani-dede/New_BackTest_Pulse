@@ -1,5 +1,5 @@
 CREATE OR REPLACE PROCEDURE sp_run_strategy_batched(
-    p_batch_type TEXT DEFAULT 'month'   -- 'month' or 'week'
+    p_batch_type TEXT DEFAULT 'quarter'   -- 'month', 'quarter', 'halfyear', 'week', 'day'
 )
 LANGUAGE plpgsql
 AS $$
@@ -32,8 +32,29 @@ BEGIN
                ========================================= */
             v_batch_end :=
                 CASE
+                    WHEN p_batch_type = 'day' THEN
+                        v_batch_start
                     WHEN p_batch_type = 'week' THEN
                         LEAST(v_batch_start + INTERVAL '6 days', rec.to_date)
+                    WHEN p_batch_type = 'month' THEN
+                        LEAST(
+                            (date_trunc('month', v_batch_start)
+                             + INTERVAL '1 month - 1 day')::date,
+                            rec.to_date
+                        )
+                    WHEN p_batch_type = 'quarter' THEN
+                        LEAST(
+                            (date_trunc('quarter', v_batch_start)
+                             + INTERVAL '3 months - 1 day')::date,
+                            rec.to_date
+                        )
+                    WHEN p_batch_type = 'halfyear' THEN
+                        LEAST(
+                            (date_trunc('year', v_batch_start)
+                             + CASE WHEN EXTRACT(MONTH FROM v_batch_start) <= 6 THEN INTERVAL '6 months - 1 day'
+                                   ELSE INTERVAL '1 year - 1 day' END)::date,
+                            rec.to_date
+                        )
                     ELSE
                         LEAST(
                             (date_trunc('month', v_batch_start)
@@ -97,30 +118,30 @@ BEGIN
               AND trade_date BETWEEN v_batch_start AND v_batch_end;
 
             /* =========================================
-               4️⃣ Refresh ONLY required materialized views
+               4️⃣ Refresh materialized views (optimized for batch size)
                ========================================= */
-               -- CRITICAL: Refresh v_strategy_config before dependent views
-        REFRESH MATERIALIZED VIEW v_strategy_config;
 
-        -- Refresh filtered materialized views (now that they are materialized)
-        REFRESH MATERIALIZED VIEW v_ha_big_filtered;
-        REFRESH MATERIALIZED VIEW v_ha_small_filtered;
-        REFRESH MATERIALIZED VIEW v_ha_1m_filtered;
-        REFRESH MATERIALIZED VIEW v_nifty50_filtered;
-        REFRESH MATERIALIZED VIEW v_nifty_options_filtered;
+            -- Always refresh core config
+            REFRESH MATERIALIZED VIEW v_strategy_config;
 
-        -- Refresh all relevant materialized views
-       -- REFRESH MATERIALIZED VIEW mv_ha_big_candle;
-       -- REFRESH MATERIALIZED VIEW mv_ha_small_candle;
-       -- REFRESH MATERIALIZED VIEW mv_ha_1m_candle;
-        -- NOTE: v_*_filtered views are regular views, not materialized - they auto-update
-        REFRESH MATERIALIZED VIEW mv_nifty_options_filtered;
-        REFRESH MATERIALIZED VIEW mv_all_5min_breakouts;
-        REFRESH MATERIALIZED VIEW mv_ranked_breakouts_with_rounds;
-        REFRESH MATERIALIZED VIEW mv_ranked_breakouts_with_rounds_for_reentry;
-        REFRESH MATERIALIZED VIEW mv_base_strike_selection;
-        REFRESH MATERIALIZED VIEW mv_breakout_context_round1;
-        REFRESH MATERIALIZED VIEW mv_entry_and_hedge_legs;
+            -- For large batches (>30 days), refresh all filtered views
+            -- For small batches, they auto-update as regular views
+            IF (v_batch_end - v_batch_start) > 30 THEN
+                REFRESH MATERIALIZED VIEW v_ha_big_filtered;
+                REFRESH MATERIALIZED VIEW v_ha_small_filtered;
+                REFRESH MATERIALIZED VIEW v_ha_1m_filtered;
+                REFRESH MATERIALIZED VIEW v_nifty50_filtered;
+                REFRESH MATERIALIZED VIEW v_nifty_options_filtered;
+            END IF;
+
+            -- Core strategy views (always refresh)
+            REFRESH MATERIALIZED VIEW mv_nifty_options_filtered;
+            REFRESH MATERIALIZED VIEW mv_all_5min_breakouts;
+            REFRESH MATERIALIZED VIEW mv_ranked_breakouts_with_rounds;
+            REFRESH MATERIALIZED VIEW mv_ranked_breakouts_with_rounds_for_reentry;
+            REFRESH MATERIALIZED VIEW mv_base_strike_selection;
+            REFRESH MATERIALIZED VIEW mv_breakout_context_round1;
+            REFRESH MATERIALIZED VIEW mv_entry_and_hedge_legs;
         -- REFRESH MATERIALIZED VIEW mv_live_prices_entry_round1;
         TRUNCATE TABLE wrk_live_prices_entry_round1;
 
@@ -216,6 +237,7 @@ JOIN v_nifty_options_filtered o
  AND o.strike = l.strike
  AND o.time BETWEEN l.entry_time AND s.eod_time;
 
+        -- Refresh reentry views (grouped to reduce peak lock usage)
         REFRESH MATERIALIZED VIEW mv_reentry_breakout_context;
         REFRESH MATERIALIZED VIEW mv_reentry_sl_hits;
         REFRESH MATERIALIZED VIEW mv_reentry_sl_executions;
@@ -333,10 +355,24 @@ SELECT
 FROM mv_portfolio_final_pnl;
 
 
+            -- Memory management: analyze tables after large inserts
+            IF (SELECT COUNT(*) FROM strategy_leg_book WHERE strategy_name = rec.strategy_name) > 5000 THEN
+                ANALYZE strategy_leg_book;
+            END IF;
+
             RAISE NOTICE
                 'Completed batch % → %',
                 v_batch_start, v_batch_end;
-
+/* =========================================
+               🔑 RELEASE LOCKS FOR THIS BATCH
+               ========================================= */
+            BEGIN
+                COMMIT;
+            EXCEPTION
+                WHEN OTHERS THEN
+                    ROLLBACK;
+                    RAISE;
+            END;
             v_batch_start := v_batch_end + INTERVAL '1 day';
         END LOOP;
 
