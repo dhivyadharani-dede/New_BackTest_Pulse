@@ -18,4 +18,6 @@ JOIN public.runtime_strategy_config r
   ON o.date >= r.from_date
  AND o.date <= r.to_date;
 
-CREATE INDEX IF NOT EXISTS idx_mv_nifty_options_filtered_date_time ON public.mv_nifty_options_filtered (date, time);
+CREATE UNIQUE INDEX CONCURRENTLY ux_mv_nifty_options_filtered
+ON mv_nifty_options_filtered
+(date, expiry, option_type, strike, time);

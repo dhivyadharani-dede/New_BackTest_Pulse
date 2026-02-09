@@ -97,4 +97,37 @@ JOIN public.runtime_strategy_config r
   ON o.date >= r.from_date
  AND o.date <= r.to_date;
 
--
+DROP INDEX IF EXISTS ux_v_ha_big_filtered;
+CREATE UNIQUE INDEX CONCURRENTLY ux_v_ha_big_filtered
+ON public.v_ha_big_filtered (
+    strategy_name,
+    trade_date,
+    candle_time
+);
+DROP INDEX CONCURRENTLY IF EXISTS ux_v_ha_small_filtered;
+
+CREATE UNIQUE INDEX CONCURRENTLY ux_v_ha_small_filtered
+ON public.v_ha_small_filtered (
+    strategy_name,
+    trade_date,
+    candle_time
+);
+DROP INDEX CONCURRENTLY IF EXISTS ux_v_ha_1m_filtered;
+
+CREATE UNIQUE INDEX CONCURRENTLY ux_v_ha_1m_filtered
+ON public.v_ha_1m_filtered (
+    strategy_name,
+    trade_date,
+    candle_time
+);
+DROP INDEX CONCURRENTLY IF EXISTS ux_v_nifty50_filtered;
+CREATE UNIQUE INDEX CONCURRENTLY ux_v_nifty50_filtered
+ON public.v_nifty50_filtered (
+    strategy_name,
+    date,
+    time
+);
+DROP INDEX CONCURRENTLY IF EXISTS ux_v_nifty_options_filtered;
+CREATE UNIQUE INDEX CONCURRENTLY ux_v_nifty_options_filtered
+ON public.v_nifty_options_filtered
+(strategy_name,date, expiry, option_type, strike, time);

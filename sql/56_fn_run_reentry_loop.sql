@@ -77,6 +77,7 @@ BEGIN
          AND o.strike = l.strike
          AND o.time BETWEEN l.entry_time AND s.eod_time;
 
+        REFRESH MATERIALIZED VIEW mv_reentry_breakout_context;
         REFRESH MATERIALIZED VIEW mv_reentry_sl_hits;
         REFRESH MATERIALIZED VIEW mv_reentry_sl_executions;
         REFRESH MATERIALIZED VIEW mv_reentry_open_legs;
@@ -84,7 +85,17 @@ BEGIN
         REFRESH MATERIALIZED VIEW mv_reentry_eod_close;
         REFRESH MATERIALIZED VIEW mv_reentry_final_exit;
         REFRESH MATERIALIZED VIEW mv_reentry_legs_stats;
-
+        REFRESH MATERIALIZED VIEW mv_hedge_reentry_exit_on_all_entry_sl;
+        REFRESH MATERIALIZED VIEW mv_hedge_reentry_exit_on_partial_conditions;
+        REFRESH MATERIALIZED VIEW mv_hedge_reentry_closed_legs;
+        REFRESH MATERIALIZED VIEW mv_hedge_reentry_eod_exit;
+        REFRESH MATERIALIZED VIEW mv_reentry_exit_on_partial_hedge;
+        REFRESH MATERIALIZED VIEW mv_double_buy_legs_reentry;
+        REFRESH MATERIALIZED VIEW mv_rehedge_trigger_reentry;
+        REFRESH MATERIALIZED VIEW mv_rehedge_candidate_reentry;
+        REFRESH MATERIALIZED VIEW mv_rehedge_selected_reentry;
+        REFRESH MATERIALIZED VIEW mv_rehedge_leg_reentry;
+        REFRESH MATERIALIZED VIEW mv_rehedge_eod_exit_reentry;
         REFRESH MATERIALIZED VIEW mv_all_legs_reentry;
 
         INSERT INTO strategy_leg_book (
@@ -145,10 +156,10 @@ END;
 $$;
 
 
--- DO $$
--- DECLARE
---     strat_name TEXT;
--- BEGIN
---     SELECT strategy_name INTO strat_name FROM v_strategy_config LIMIT 1;
---     PERFORM fn_run_reentry_loop(strat_name);
--- END $$;
+DO $$
+DECLARE
+    strat_name TEXT;
+BEGIN
+    SELECT strategy_name INTO strat_name FROM v_strategy_config LIMIT 1;
+    PERFORM fn_run_reentry_loop(strat_name);
+END $$;

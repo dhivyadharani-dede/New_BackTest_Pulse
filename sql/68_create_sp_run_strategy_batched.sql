@@ -7,6 +7,7 @@ DECLARE
     rec RECORD;
     v_batch_start DATE;
     v_batch_end   DATE;
+    v_base_views_refreshed BOOLEAN := FALSE;
 BEGIN
     -- Disable JIT for large analytical workloads
     PERFORM set_config('jit', 'off', true);
@@ -23,7 +24,33 @@ BEGIN
             'Starting strategy % (% → %)',
             rec.strategy_name, rec.from_date, rec.to_date;
 
+        /* =========================================
+           🧹 Cleanup old results for this strategy
+           ========================================= */
+        DELETE FROM strategy_run_results
+        WHERE strategy_name = rec.strategy_name;
+
+        DELETE FROM strategy_leg_book
+        WHERE strategy_name = rec.strategy_name;
+
         v_batch_start := rec.from_date;
+        
+IF NOT v_base_views_refreshed THEN
+    RAISE NOTICE 'Refreshing base filtered MVs (once per run)';
+
+    COMMIT;  -- must not be inside a transaction
+
+    REFRESH MATERIALIZED VIEW CONCURRENTLY v_ha_big_filtered;
+    REFRESH MATERIALIZED VIEW CONCURRENTLY v_ha_small_filtered;
+    REFRESH MATERIALIZED VIEW CONCURRENTLY v_ha_1m_filtered;
+    REFRESH MATERIALIZED VIEW CONCURRENTLY v_nifty_options_filtered;
+    REFRESH MATERIALIZED VIEW CONCURRENTLY  v_nifty50_filtered ;
+    
+
+    v_base_views_refreshed := TRUE;
+
+    COMMIT;  -- clean boundary before batch work starts
+END IF;
 
         WHILE v_batch_start <= rec.to_date LOOP
 
@@ -107,17 +134,7 @@ BEGIN
             WHERE strategy_name = rec.strategy_name;
 
             /* =========================================
-               3️⃣ Cleanup old results for this batch
-               ========================================= */
-            DELETE FROM strategy_run_results
-            WHERE strategy_name = rec.strategy_name
-              AND trade_date BETWEEN v_batch_start AND v_batch_end;
 
-            DELETE FROM strategy_leg_book
-            WHERE strategy_name = rec.strategy_name
-              AND trade_date BETWEEN v_batch_start AND v_batch_end;
-
-            /* =========================================
                4️⃣ Refresh materialized views (optimized for batch size)
                ========================================= */
 
@@ -126,16 +143,18 @@ BEGIN
 
             -- For large batches (>30 days), refresh all filtered views
             -- For small batches, they auto-update as regular views
-            IF (v_batch_end - v_batch_start) > 30 THEN
-                REFRESH MATERIALIZED VIEW v_ha_big_filtered;
-                REFRESH MATERIALIZED VIEW v_ha_small_filtered;
-                REFRESH MATERIALIZED VIEW v_ha_1m_filtered;
-                REFRESH MATERIALIZED VIEW v_nifty50_filtered;
-                REFRESH MATERIALIZED VIEW v_nifty_options_filtered;
-            END IF;
+          
+COMMIT;
+
+-- IF (v_batch_end - v_batch_start) > 30 THEN
+--     REFRESH MATERIALIZED VIEW CONCURRENTLY v_ha_big_filtered;
+--     REFRESH MATERIALIZED VIEW CONCURRENTLY v_ha_small_filtered;
+--     REFRESH MATERIALIZED VIEW CONCURRENTLY v_ha_1m_filtered;
+--     REFRESH MATERIALIZED VIEW CONCURRENTLY v_nifty_options_filtered;
+-- END IF;
 
             -- Core strategy views (always refresh)
-            REFRESH MATERIALIZED VIEW mv_nifty_options_filtered;
+            --REFRESH MATERIALIZED VIEW mv_nifty_options_filtered;
             REFRESH MATERIALIZED VIEW mv_all_5min_breakouts;
             REFRESH MATERIALIZED VIEW mv_ranked_breakouts_with_rounds;
             REFRESH MATERIALIZED VIEW mv_ranked_breakouts_with_rounds_for_reentry;
@@ -199,9 +218,12 @@ JOIN v_nifty_options_filtered o
         REFRESH MATERIALIZED VIEW mv_rehedge_eod_exit_round1;
         REFRESH MATERIALIZED VIEW mv_all_legs_round1;
         CALL insert_sl_legs_into_book(rec.strategy_name);
+        REFRESH MATERIALIZED VIEW mv_ranked_breakouts_with_rounds_for_reentry;
         REFRESH MATERIALIZED VIEW mv_reentry_triggered_breakouts;
         REFRESH MATERIALIZED VIEW mv_reentry_base_strike_selection;
+        REFRESH MATERIALIZED VIEW mv_reentry_breakout_context;
         REFRESH MATERIALIZED VIEW mv_reentry_legs_and_hedge_legs;
+
         -- REFRESH MATERIALIZED VIEW mv_reentry_live_prices;
         TRUNCATE TABLE wrk_reentry_live_prices;
 
@@ -310,51 +332,6 @@ JOIN v_nifty50_filtered n
         REFRESH MATERIALIZED VIEW mv_portfolio_final_pnl;
 
 
-            /* =========================================
-               9️⃣ Store FINAL results for this batch
-               ========================================= */
-INSERT INTO strategy_run_results (
-    strategy_name,
-    trade_date,
-    expiry_date,
-    breakout_time,
-    entry_time,
-    spot_price,
-    option_type,
-    strike,
-    entry_price,
-    sl_level,
-    entry_round,
-    leg_type,
-    transaction_type,
-    exit_time,
-    exit_price,
-    exit_reason,
-    pnl_amount,
-    total_pnl_per_day
-)
-SELECT
-    rec.strategy_name,              -- ✅ injected
-    trade_date::date,               -- ✅ ensure DATE
-    expiry_date::date,
-    breakout_time::time,
-    entry_time::time,
-    spot_price,
-    option_type,
-    strike,
-    entry_price,
-    sl_level,
-    entry_round,
-    leg_type,
-    transaction_type,
-    exit_time::time,
-    exit_price,
-    exit_reason,
-    pnl_amount,
-    total_pnl_per_day
-FROM mv_portfolio_final_pnl;
-
-
             -- Memory management: analyze tables after large inserts
             IF (SELECT COUNT(*) FROM strategy_leg_book WHERE strategy_name = rec.strategy_name) > 5000 THEN
                 ANALYZE strategy_leg_book;
@@ -366,15 +343,55 @@ FROM mv_portfolio_final_pnl;
 /* =========================================
                🔑 RELEASE LOCKS FOR THIS BATCH
                ========================================= */
-            BEGIN
-                COMMIT;
-            EXCEPTION
-                WHEN OTHERS THEN
-                    ROLLBACK;
-                    RAISE;
-            END;
+            COMMIT;  -- Ensure all locks are released before next batch starts
             v_batch_start := v_batch_end + INTERVAL '1 day';
         END LOOP;
+
+        /* =========================================
+           🔄 STORE ALL RESULTS for this strategy
+           ========================================= */
+        RAISE NOTICE 'Storing final results for strategy %', rec.strategy_name;
+
+        INSERT INTO strategy_run_results (
+            strategy_name,
+            trade_date,
+            expiry_date,
+            breakout_time,
+            entry_time,
+            spot_price,
+            option_type,
+            strike,
+            entry_price,
+            sl_level,
+            entry_round,
+            leg_type,
+            transaction_type,
+            exit_time,
+            exit_price,
+            exit_reason,
+            pnl_amount,
+            total_pnl_per_day
+        )
+        SELECT
+            rec.strategy_name,              -- ✅ injected
+            trade_date::date,               -- ✅ ensure DATE
+            expiry_date::date,
+            breakout_time::time,
+            entry_time::time,
+            spot_price,
+            option_type,
+            strike,
+            entry_price,
+            sl_level,
+            entry_round,
+            leg_type,
+            transaction_type,
+            exit_time::time,
+            exit_price,
+            exit_reason,
+            pnl_amount,
+            total_pnl_per_day
+        FROM mv_portfolio_final_pnl;
 
         RAISE NOTICE
             'Completed strategy %',
