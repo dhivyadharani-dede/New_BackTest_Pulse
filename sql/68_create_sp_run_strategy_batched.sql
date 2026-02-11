@@ -27,14 +27,28 @@ BEGIN
         /* =========================================
            🧹 Cleanup old results for this strategy
            ========================================= */
-        DELETE FROM strategy_run_results
-        WHERE strategy_name = rec.strategy_name;
+        -- DELETE FROM strategy_run_results
+        -- WHERE strategy_name = rec.strategy_name;
 
         DELETE FROM strategy_leg_book
         WHERE strategy_name = rec.strategy_name;
 
         v_batch_start := rec.from_date;
-        
+        -- Reset runtime date table for this strategy
+DELETE FROM runtime_strategy_dates
+WHERE strategy_name = rec.strategy_name;
+
+INSERT INTO runtime_strategy_dates (
+    strategy_name,
+    from_date,
+    to_date
+)
+VALUES (
+    rec.strategy_name,
+    rec.from_date,
+    rec.to_date
+);
+
 IF NOT v_base_views_refreshed THEN
     RAISE NOTICE 'Refreshing base filtered MVs (once per run)';
 
@@ -144,7 +158,7 @@ END IF;
             -- For large batches (>30 days), refresh all filtered views
             -- For small batches, they auto-update as regular views
           
-COMMIT;
+-- COMMIT;
 
 -- IF (v_batch_end - v_batch_start) > 30 THEN
 --     REFRESH MATERIALIZED VIEW CONCURRENTLY v_ha_big_filtered;
@@ -218,12 +232,9 @@ JOIN v_nifty_options_filtered o
         REFRESH MATERIALIZED VIEW mv_rehedge_eod_exit_round1;
         REFRESH MATERIALIZED VIEW mv_all_legs_round1;
         CALL insert_sl_legs_into_book(rec.strategy_name);
-        REFRESH MATERIALIZED VIEW mv_ranked_breakouts_with_rounds_for_reentry;
         REFRESH MATERIALIZED VIEW mv_reentry_triggered_breakouts;
         REFRESH MATERIALIZED VIEW mv_reentry_base_strike_selection;
-        REFRESH MATERIALIZED VIEW mv_reentry_breakout_context;
         REFRESH MATERIALIZED VIEW mv_reentry_legs_and_hedge_legs;
-
         -- REFRESH MATERIALIZED VIEW mv_reentry_live_prices;
         TRUNCATE TABLE wrk_reentry_live_prices;
 
@@ -331,27 +342,7 @@ JOIN v_nifty50_filtered n
         REFRESH MATERIALIZED VIEW mv_portfolio_mtm_pnl;
         REFRESH MATERIALIZED VIEW mv_portfolio_final_pnl;
 
-
-            -- Memory management: analyze tables after large inserts
-            IF (SELECT COUNT(*) FROM strategy_leg_book WHERE strategy_name = rec.strategy_name) > 5000 THEN
-                ANALYZE strategy_leg_book;
-            END IF;
-
-            RAISE NOTICE
-                'Completed batch % → %',
-                v_batch_start, v_batch_end;
-/* =========================================
-               🔑 RELEASE LOCKS FOR THIS BATCH
-               ========================================= */
-            COMMIT;  -- Ensure all locks are released before next batch starts
-            v_batch_start := v_batch_end + INTERVAL '1 day';
-        END LOOP;
-
-        /* =========================================
-           🔄 STORE ALL RESULTS for this strategy
-           ========================================= */
-        RAISE NOTICE 'Storing final results for strategy %', rec.strategy_name;
-
+-- Store final results
         INSERT INTO strategy_run_results (
             strategy_name,
             trade_date,
@@ -373,11 +364,11 @@ JOIN v_nifty50_filtered n
             total_pnl_per_day
         )
         SELECT
-            rec.strategy_name,              -- ✅ injected
-            trade_date::date,               -- ✅ ensure DATE
-            expiry_date::date,
-            breakout_time::time,
-            entry_time::time,
+            rec.strategy_name,
+            trade_date,
+            expiry_date,
+            breakout_time,
+            entry_time,
             spot_price,
             option_type,
             strike,
@@ -386,13 +377,36 @@ JOIN v_nifty50_filtered n
             entry_round,
             leg_type,
             transaction_type,
-            exit_time::time,
+            exit_time,
             exit_price,
             exit_reason,
             pnl_amount,
             total_pnl_per_day
-        FROM mv_portfolio_final_pnl;
+        FROM mv_portfolio_final_pnl
+        WHERE trade_date BETWEEN v_batch_start AND v_batch_end;
 
+            -- Memory management: analyze tables after large inserts
+            -- IF (SELECT COUNT(*) FROM strategy_leg_book WHERE strategy_name = rec.strategy_name) > 5000 THEN
+            --     ANALYZE strategy_leg_book;
+            -- END IF;
+
+            RAISE NOTICE
+                'Completed batch % → %',
+                v_batch_start, v_batch_end;
+/* =========================================
+               🔑 RELEASE LOCKS FOR THIS BATCH
+               ========================================= */
+            COMMIT;  -- Ensure all locks are released before next batch starts
+            v_batch_start := v_batch_end + INTERVAL '1 day';
+        
+
+        /* =========================================
+           🔄 STORE ALL RESULTS for this strategy
+           ========================================= */
+        RAISE NOTICE 'Storing final results for strategy %', rec.strategy_name;
+
+        
+END LOOP;
         RAISE NOTICE
             'Completed strategy %',
             rec.strategy_name;
