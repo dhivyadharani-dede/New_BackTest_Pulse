@@ -35,8 +35,8 @@ BEGIN
 
         v_batch_start := rec.from_date;
         -- Reset runtime date table for this strategy
-DELETE FROM runtime_strategy_dates
-WHERE strategy_name = rec.strategy_name;
+DELETE FROM runtime_strategy_dates;
+--WHERE strategy_name = rec.strategy_name;
 
 INSERT INTO runtime_strategy_dates (
     strategy_name,
@@ -54,11 +54,11 @@ IF NOT v_base_views_refreshed THEN
 
     COMMIT;  -- must not be inside a transaction
 
-    REFRESH MATERIALIZED VIEW CONCURRENTLY v_ha_big_filtered;
-    REFRESH MATERIALIZED VIEW CONCURRENTLY v_ha_small_filtered;
-    REFRESH MATERIALIZED VIEW CONCURRENTLY v_ha_1m_filtered;
-    REFRESH MATERIALIZED VIEW CONCURRENTLY v_nifty_options_filtered;
-    REFRESH MATERIALIZED VIEW CONCURRENTLY  v_nifty50_filtered ;
+REFRESH MATERIALIZED VIEW public.v_ha_big_filtered;
+REFRESH MATERIALIZED VIEW public.v_ha_small_filtered;
+REFRESH MATERIALIZED VIEW public.v_ha_1m_filtered;
+REFRESH MATERIALIZED VIEW public.v_nifty50_filtered;
+REFRESH MATERIALIZED VIEW public.v_nifty_options_filtered;
     
 
     v_base_views_refreshed := TRUE;

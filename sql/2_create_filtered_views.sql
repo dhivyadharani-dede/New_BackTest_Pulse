@@ -20,9 +20,11 @@ SELECT
   h.ha_low,
   h.ha_close
 FROM public.ha_big h
-JOIN public.runtime_strategy_dates r
-  ON h.trade_date >= r.from_date
- AND h.trade_date <= r.to_date;
+WHERE EXISTS (
+    SELECT 1
+    FROM runtime_strategy_dates r
+    WHERE h.trade_date BETWEEN r.from_date AND r.to_date
+);
 
 CREATE MATERIALIZED VIEW IF NOT EXISTS public.v_ha_small_filtered AS
 SELECT
@@ -38,9 +40,11 @@ SELECT
   h.ha_low,
   h.ha_close
 FROM public.ha_small h
-JOIN public.runtime_strategy_dates r
-  ON h.trade_date >= r.from_date
- AND h.trade_date <= r.to_date;
+WHERE EXISTS (
+    SELECT 1
+    FROM runtime_strategy_dates r
+    WHERE h.trade_date BETWEEN r.from_date AND r.to_date
+);
 
 CREATE MATERIALIZED VIEW IF NOT EXISTS public.v_ha_1m_filtered AS
 SELECT
@@ -56,9 +60,11 @@ SELECT
   h.ha_low,
   h.ha_close
 FROM public.ha_1m h
-JOIN public.runtime_strategy_dates r
-  ON h.trade_date >= r.from_date
- AND h.trade_date <= r.to_date;
+WHERE EXISTS (
+    SELECT 1
+    FROM runtime_strategy_dates r
+    WHERE h.trade_date BETWEEN r.from_date AND r.to_date
+);
 
 -- Source market data views
 CREATE MATERIALIZED VIEW IF NOT EXISTS public.v_nifty50_filtered AS
@@ -74,9 +80,11 @@ SELECT
   m.oi,
   m.option_nm
 FROM public."Nifty50" m
-JOIN public.runtime_strategy_dates r
-  ON m.date >= r.from_date
- AND m.date <= r.to_date;
+WHERE EXISTS (
+    SELECT 1
+    FROM runtime_strategy_dates r
+    WHERE m.date BETWEEN r.from_date AND r.to_date
+);
 
 CREATE MATERIALIZED VIEW IF NOT EXISTS public.v_nifty_options_filtered AS
 SELECT
@@ -93,41 +101,29 @@ SELECT
   o.strike,
   o.expiry
 FROM public."Nifty_options" o
-JOIN public.runtime_strategy_dates r
-  ON o.date >= r.from_date
- AND o.date <= r.to_date;
+WHERE EXISTS (
+    SELECT 1
+    FROM runtime_strategy_dates r
+    WHERE  o.date BETWEEN r.from_date AND r.to_date
+);
 
 DROP INDEX IF EXISTS ux_v_ha_big_filtered;
-CREATE UNIQUE INDEX CONCURRENTLY ux_v_ha_big_filtered
-ON public.v_ha_big_filtered (
-    -- strategy_name,
-    trade_date,
-    candle_time
-);
-DROP INDEX CONCURRENTLY IF EXISTS ux_v_ha_small_filtered;
+CREATE UNIQUE INDEX ux_v_ha_big_filtered
+ON public.v_ha_big_filtered (trade_date, candle_time);
 
-CREATE UNIQUE INDEX CONCURRENTLY ux_v_ha_small_filtered
-ON public.v_ha_small_filtered (
-    -- strate/gy_name,
-    trade_date,
-    candle_time
-);
-DROP INDEX CONCURRENTLY IF EXISTS ux_v_ha_1m_filtered;
+DROP INDEX IF EXISTS ux_v_ha_small_filtered;
+CREATE UNIQUE INDEX ux_v_ha_small_filtered
+ON public.v_ha_small_filtered (trade_date, candle_time);
 
-CREATE UNIQUE INDEX CONCURRENTLY ux_v_ha_1m_filtered
-ON public.v_ha_1m_filtered (
-    -- strategy_name,
-    trade_date,
-    candle_time
-);
-DROP INDEX CONCURRENTLY IF EXISTS ux_v_nifty50_filtered;
-CREATE UNIQUE INDEX CONCURRENTLY ux_v_nifty50_filtered
-ON public.v_nifty50_filtered (
-    -- strategy_name,
-    date,
-    time
-);
-DROP INDEX CONCURRENTLY IF EXISTS ux_v_nifty_options_filtered;
-CREATE UNIQUE INDEX CONCURRENTLY ux_v_nifty_options_filtered
+DROP INDEX IF EXISTS ux_v_ha_1m_filtered;
+CREATE UNIQUE INDEX ux_v_ha_1m_filtered
+ON public.v_ha_1m_filtered (trade_date, candle_time);
+
+DROP INDEX IF EXISTS ux_v_nifty50_filtered;
+CREATE UNIQUE INDEX ux_v_nifty50_filtered
+ON public.v_nifty50_filtered (date, time);
+
+DROP INDEX IF EXISTS ux_v_nifty_options_filtered;
+CREATE UNIQUE INDEX ux_v_nifty_options_filtered
 ON public.v_nifty_options_filtered
 (date, expiry, option_type, strike, time);

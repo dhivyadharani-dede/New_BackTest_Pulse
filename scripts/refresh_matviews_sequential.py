@@ -119,7 +119,7 @@ ORDERED_SQL = [
     # '62_sp_run_strategy.sql',
     # '67_call_sp_run_strategy.sql',
     '68_create_sp_run_strategy_batched.sql',
-    '69_call_sp_run_strategy_batched.sql'
+    # '69_call_sp_run_strategy_batched.sql'
 
 
 ]
