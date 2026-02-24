@@ -20,11 +20,8 @@ SELECT
   h.ha_low,
   h.ha_close
 FROM public.ha_big h
-WHERE EXISTS (
-    SELECT 1
-    FROM runtime_strategy_dates r
-    WHERE h.trade_date BETWEEN r.from_date AND r.to_date
-);
+WHERE  h.trade_date >= (SELECT from_date FROM runtime_strategy_dates LIMIT 1)
+  AND  h.trade_date <= (SELECT to_date FROM runtime_strategy_dates LIMIT 1);
 
 CREATE MATERIALIZED VIEW IF NOT EXISTS public.v_ha_small_filtered AS
 SELECT
@@ -40,11 +37,8 @@ SELECT
   h.ha_low,
   h.ha_close
 FROM public.ha_small h
-WHERE EXISTS (
-    SELECT 1
-    FROM runtime_strategy_dates r
-    WHERE h.trade_date BETWEEN r.from_date AND r.to_date
-);
+WHERE h.trade_date >= (SELECT from_date FROM runtime_strategy_dates LIMIT 1)
+  AND h.trade_date <= (SELECT to_date FROM runtime_strategy_dates LIMIT 1);
 
 CREATE MATERIALIZED VIEW IF NOT EXISTS public.v_ha_1m_filtered AS
 SELECT
@@ -60,11 +54,8 @@ SELECT
   h.ha_low,
   h.ha_close
 FROM public.ha_1m h
-WHERE EXISTS (
-    SELECT 1
-    FROM runtime_strategy_dates r
-    WHERE h.trade_date BETWEEN r.from_date AND r.to_date
-);
+WHERE h.trade_date >= (SELECT from_date FROM runtime_strategy_dates LIMIT 1)
+  AND h.trade_date <= (SELECT to_date FROM runtime_strategy_dates LIMIT 1);
 
 -- Source market data views
 CREATE MATERIALIZED VIEW IF NOT EXISTS public.v_nifty50_filtered AS
@@ -80,11 +71,8 @@ SELECT
   m.oi,
   m.option_nm
 FROM public."Nifty50" m
-WHERE EXISTS (
-    SELECT 1
-    FROM runtime_strategy_dates r
-    WHERE m.date BETWEEN r.from_date AND r.to_date
-);
+WHERE m.date >= (SELECT from_date FROM runtime_strategy_dates LIMIT 1)
+  AND m.date <= (SELECT to_date FROM runtime_strategy_dates LIMIT 1);
 
 CREATE MATERIALIZED VIEW IF NOT EXISTS public.v_nifty_options_filtered AS
 SELECT
@@ -101,11 +89,8 @@ SELECT
   o.strike,
   o.expiry
 FROM public."Nifty_options" o
-WHERE EXISTS (
-    SELECT 1
-    FROM runtime_strategy_dates r
-    WHERE  o.date BETWEEN r.from_date AND r.to_date
-);
+WHERE o.date >= (SELECT from_date FROM runtime_strategy_dates LIMIT 1)
+  AND o.date <= (SELECT to_date FROM runtime_strategy_dates LIMIT 1);
 
 DROP INDEX IF EXISTS ux_v_ha_big_filtered;
 CREATE UNIQUE INDEX ux_v_ha_big_filtered

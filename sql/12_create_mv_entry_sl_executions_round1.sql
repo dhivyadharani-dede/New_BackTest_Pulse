@@ -48,9 +48,11 @@ sl_executed AS (
             WHEN sh.exit_reason = 'SL_HIT_BOX_HARD_SL'
                 THEN ROUND(lp.entry_price * (1 + s.box_sl_hard_pct), 2)
 
-            WHEN sh.exit_reason = 'SL_HIT_BOX_TRIGGER_SL'
-                THEN ROUND(lp.entry_price * (1 + s.box_sl_trigger_pct), 2)
-
+           WHEN sh.exit_reason = 'SL_HIT_BOX_TRIGGER_SL'
+                THEN GREATEST(
+                    ROUND((lp.option_high + lp.option_close) / 2.0, 2),
+                    ROUND(lp.entry_price * (1 + s.box_sl_trigger_pct), 2)
+                    )
             ELSE lp.option_high
         END AS exit_price,
         sh.exit_reason,
@@ -66,9 +68,11 @@ sl_executed AS (
                         THEN ROUND(lp.entry_price * (1 + s.box_sl_hard_pct), 2)
 
                     WHEN sh.exit_reason = 'SL_HIT_BOX_TRIGGER_SL'
-                        THEN ROUND(lp.entry_price * (1 + s.box_sl_trigger_pct), 2)
-
-                    ELSE lp.option_close
+                        THEN GREATEST(
+                            ROUND((lp.option_high + lp.option_close) / 2.0, 2),
+                            ROUND(lp.entry_price * (1 + s.box_sl_trigger_pct), 2)
+                            )
+                    ELSE lp.option_high
                 END
             )
             * s.lot_size
